@@ -11,8 +11,9 @@ updated: 2026-09-24
 ## 현재 포커스
 
 - 현재 단계: M1 완료, M2 착수 준비
-- 다음 작업: ADR-001~004·006 확정 및 문서화
-- 후속 작업: C01 event/mood/health/diary JSON Schema 확정
+- 완료: ADR-001~006 P0 결정 승인 및 문서화
+- 다음 작업: C01 event/mood/health/diary JSON Schema 확정
+- 후속 작업: C02 DB 제약과 애플리케이션 타입 일치
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
@@ -24,6 +25,7 @@ updated: 2026-09-24
 - [/] A05 기존 `schema.sql`을 순차 migration으로 변환 — foundation 및 보안 migration 3개 적용
 - [x] A06 공통 오류 형식, request ID, JSON logger 구성
 - [x] A07 CI에서 lint, typecheck, unit test 실행 — Node 24, npm ci, npm run check
+- [x] A08 ADR-001~006 P0 결정 승인 — 공급자·하루 경계·기억 원장·근거·런타임·안전
 
 ## EPIC B — Telegram 대화
 
