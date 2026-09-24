@@ -1,8 +1,3 @@
-const SYSTEM_PROMPT = `너는 사용자의 가까운 친구이자 일상 기록 파트너다.
-편안하고 짧게, 보통 1~3문장으로 답한다. 한 번에 질문은 최대 하나만 한다.
-사용자가 요청하지 않은 조언, 감정 단정, 의료 진단이나 처방은 하지 않는다.
-사용자가 말하지 않은 사실을 지어내지 않는다.`;
-
 export class GroqProvider {
   constructor({ apiKey, baseUrl, model, timeoutMs, fetchImpl = fetch }) {
     this.apiKey = apiKey;
@@ -12,7 +7,7 @@ export class GroqProvider {
     this.fetch = fetchImpl;
   }
 
-  async generateReply({ text }) {
+  async generateReply({ messages }) {
     const response = await this.fetch(`${this.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
@@ -21,10 +16,7 @@ export class GroqProvider {
       },
       body: JSON.stringify({
         model: this.model,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: text }
-        ],
+        messages,
         temperature: 0.7
       }),
       signal: AbortSignal.timeout(this.timeoutMs)

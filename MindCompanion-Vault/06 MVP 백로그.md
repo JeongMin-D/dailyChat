@@ -25,7 +25,7 @@ updated: 2026-09-24
 - [x] B03 허용 `chat_id`/`user_id` 이중 검사
 - [x] B04 user 메시지를 응답 전에 저장
 - [x] B05 Groq provider 인터페이스 구현
-- [ ] B06 SOUL 프롬프트와 컨텍스트 빌더 구현
+- [x] B06 SOUL 프롬프트와 컨텍스트 빌더 구현 — 최근 12개·6,000자 제한
 - [x] B07 assistant 메시지 저장 후 전송
 - [/] B08 timeout·429·5xx 재시도 테스트 — timeout과 Telegram 재전송 경로 구현, backoff 대기
 - [x] B09 비허용 사용자 무응답/차단 테스트

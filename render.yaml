@@ -21,6 +21,10 @@ services:
         value: "1048576"
       - key: UPSTREAM_TIMEOUT_MS
         value: "15000"
+      - key: CONVERSATION_HISTORY_LIMIT
+        value: "12"
+      - key: CONVERSATION_CONTEXT_CHARS
+        value: "6000"
       - key: GROQ_BASE_URL
         value: https://api.groq.com/openai/v1
       - key: GROQ_CHAT_MODEL

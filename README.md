@@ -4,7 +4,7 @@ Telegram 대화를 근거 있는 개인 기록과 일기로 만드는 단일 사
 
 ## 현재 상태
 
-M1 대화 수직 슬라이스를 구현 중입니다. KST 04:00 하루 경계와 Telegram webhook 인증, 허용 사용자 검사, 메시지 선저장, Groq 응답, Telegram 전송 및 실패 재처리 경로가 구현돼 있습니다.
+M1 대화 수직 슬라이스가 Render에 배포돼 있습니다. KST 04:00 하루 경계, Telegram webhook 인증, 허용 사용자 검사, 메시지 선저장, SOUL 프롬프트, 제한된 최근 대화 컨텍스트, Groq 응답, Telegram 전송 및 실패 재처리 경로가 구현돼 있습니다.
 
 ## 요구 환경
 
@@ -65,11 +65,11 @@ MindCompanion-Vault/    Obsidian 개발 문서
 - 브라우저에는 Supabase service role을 노출하지 않습니다.
 - 기억은 수정·삭제·추적 가능해야 합니다.
 
-## 아직 필요한 외부 설정
+## 운영 상태
 
-- `database/migrations/0001_foundation.sql`을 Supabase 개발 프로젝트에 적용
-- Telegram Bot 생성 및 webhook URL/secret 등록
-- Groq API key와 모델 접근 확인
-- 실제 서비스 조합 smoke test
+- Supabase `dailyChat` migration 및 설정 적용 완료
+- Telegram webhook 등록 및 실대화 검증 완료
+- Groq 모델 연결 및 변경된 API key 검증 완료
+- Render `dailychat-bot` 배포 및 `/health` 검증 완료
 
 개발 순서는 [Obsidian 일정](<MindCompanion-Vault/14 개발 우선순위 및 일정.md>)을 따릅니다.

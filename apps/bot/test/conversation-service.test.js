@@ -6,6 +6,10 @@ import { createConversationService } from "../src/conversation-service.js";
 const config = {
   timeZone: "Asia/Seoul",
   dayBoundaryHour: 4,
+  conversation: {
+    historyLimit: 12,
+    maxContextChars: 6000
+  },
   telegram: {
     webhookSecret: "test-secret",
     allowedUserId: "100",
@@ -27,12 +31,13 @@ function update(overrides = {}) {
   };
 }
 
-function setup({ claimed = true, existingReply = null, llmError, sendError } = {}) {
+function setup({ claimed = true, existingReply = null, history = [], llmError, sendError } = {}) {
   const calls = [];
   const store = {
     async claimUpdate(id) { calls.push(["claim", id]); return claimed; },
     async saveUserMessage(message) { calls.push(["save-user", message]); },
     async findAssistantReply(id) { calls.push(["find-reply", id]); return existingReply; },
+    async listRecentMessages(input) { calls.push(["list-history", input]); return history; },
     async saveAssistantReply(message) { calls.push(["save-assistant", message]); },
     async completeUpdate(id) { calls.push(["complete", id]); },
     async failUpdate(id, code) { calls.push(["fail", id, code]); }
@@ -53,7 +58,14 @@ function setup({ claimed = true, existingReply = null, llmError, sendError } = {
   const logger = { error() {} };
   return {
     calls,
-    service: createConversationService({ config, store, llm, telegram, logger })
+    service: createConversationService({
+      config,
+      store,
+      llm,
+      telegram,
+      systemPrompt: "테스트 SOUL",
+      logger
+    })
   };
 }
 
@@ -83,12 +95,33 @@ test("사용자 원문을 LLM 호출 전에 저장하고 응답을 전송한다"
     "claim",
     "save-user",
     "find-reply",
+    "list-history",
     "llm",
     "save-assistant",
     "send",
     "complete"
   ]);
   assert.match(calls[1][1].day, /^\d{4}-\d{2}-\d{2}$/);
+  assert.deepEqual(calls.find(([name]) => name === "llm")[1].messages, [
+    { role: "system", content: "테스트 SOUL" },
+    { role: "user", content: "오늘 HMI 문제를 해결했어" }
+  ]);
+});
+
+test("최근 대화를 시간 순서대로 SOUL 프롬프트와 함께 전달한다", async () => {
+  const history = [
+    { role: "user", content: "아침부터 문제가 있었어" },
+    { role: "assistant", content: "계속 신경 쓰였겠다." }
+  ];
+  const { service, calls } = setup({ history });
+
+  await service.handle({ secret: "test-secret", update: update() });
+
+  assert.deepEqual(calls.find(([name]) => name === "llm")[1].messages, [
+    { role: "system", content: "테스트 SOUL" },
+    ...history,
+    { role: "user", content: "오늘 HMI 문제를 해결했어" }
+  ]);
 });
 
 test("이미 처리 중이거나 완료된 update는 중복 처리하지 않는다", async () => {

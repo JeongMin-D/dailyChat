@@ -1,4 +1,5 @@
 import { getLocalDay } from "../../../packages/core/src/time/local-day.js";
+import { buildConversationMessages } from "./prompt-context.js";
 import { isValidWebhookSecret, parseTextUpdate } from "./telegram.js";
 
 function errorCode(error) {
@@ -6,7 +7,14 @@ function errorCode(error) {
   return "CONVERSATION_FAILED";
 }
 
-export function createConversationService({ config, store, llm, telegram, logger = console }) {
+export function createConversationService({
+  config,
+  store,
+  llm,
+  telegram,
+  systemPrompt,
+  logger = console
+}) {
   return {
     async handle({ secret, update }) {
       if (!isValidWebhookSecret(secret, config.telegram.webhookSecret)) {
@@ -36,7 +44,20 @@ export function createConversationService({ config, store, llm, telegram, logger
 
         let reply = await store.findAssistantReply(message.updateId);
         if (!reply) {
-          reply = await llm.generateReply({ text: message.text });
+          const history = config.conversation.historyLimit === 0
+            ? []
+            : await store.listRecentMessages({
+                chatId: message.chatId,
+                before: message.sentAt,
+                limit: config.conversation.historyLimit
+              });
+          const messages = buildConversationMessages({
+            systemPrompt,
+            history,
+            currentText: message.text,
+            maxContextChars: config.conversation.maxContextChars
+          });
+          reply = await llm.generateReply({ messages });
           const replyTime = new Date();
           await store.saveAssistantReply({
             updateId: message.updateId,

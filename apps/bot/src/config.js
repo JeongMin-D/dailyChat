@@ -37,6 +37,13 @@ export function loadConfig(env = process.env) {
     }),
     timeZone: env.APP_TIMEZONE?.trim() || "Asia/Seoul",
     dayBoundaryHour: integer(env, "DAY_BOUNDARY_HOUR", 4, { min: 0, max: 23 }),
+    conversation: {
+      historyLimit: integer(env, "CONVERSATION_HISTORY_LIMIT", 12, { min: 0, max: 50 }),
+      maxContextChars: integer(env, "CONVERSATION_CONTEXT_CHARS", 6_000, {
+        min: 500,
+        max: 50_000
+      })
+    },
     telegram: {
       token: required(env, "TELEGRAM_BOT_TOKEN"),
       webhookSecret: required(env, "TELEGRAM_WEBHOOK_SECRET"),

@@ -14,8 +14,11 @@ Webhook은 `X-Telegram-Bot-Api-Secret-Token`을 검증하고 허용된 user/chat
 1. webhook secret과 사용자 검사
 2. Telegram update claim
 3. 사용자 메시지 선저장
-4. Groq 응답 생성 및 assistant 메시지 저장
-5. Telegram 전송
-6. update 완료 처리
+4. 최근 대화 조회 및 문자 예산에 맞춘 Context 구성
+5. `files/SOUL.md`를 system prompt로 사용해 Groq 응답 생성
+6. assistant 메시지 저장 및 Telegram 전송
+7. update 완료 처리
 
 실패한 update는 `retryable_failed`로 남기며 Telegram 재전송 시 저장된 assistant 응답을 재사용합니다.
+
+기본 Context 제한은 최근 12개 메시지와 총 6,000자입니다. 각각 `CONVERSATION_HISTORY_LIMIT`, `CONVERSATION_CONTEXT_CHARS`로 조정할 수 있습니다.

@@ -62,6 +62,27 @@ export class SupabaseMessageStore {
     return rows?.[0]?.content ?? null;
   }
 
+  async listRecentMessages({ chatId, before, limit }) {
+    const params = new URLSearchParams({
+      telegram_chat_id: `eq.${Number(chatId)}`,
+      role: "in.(user,assistant)",
+      sent_at: `lt.${before.toISOString()}`,
+      select: "role,content,sent_at,telegram_update_id,reply_to_update_id",
+      order: "sent_at.desc",
+      limit: String(limit)
+    });
+    const rows = await this.request(`/messages?${params}`, { method: "GET" });
+    return (rows ?? []).sort((left, right) => {
+      const leftUpdateId = Number(left.telegram_update_id ?? left.reply_to_update_id);
+      const rightUpdateId = Number(right.telegram_update_id ?? right.reply_to_update_id);
+      if (Number.isFinite(leftUpdateId) && Number.isFinite(rightUpdateId)) {
+        if (leftUpdateId !== rightUpdateId) return leftUpdateId - rightUpdateId;
+        if (left.role !== right.role) return left.role === "user" ? -1 : 1;
+      }
+      return new Date(left.sent_at).getTime() - new Date(right.sent_at).getTime();
+    });
+  }
+
   async saveAssistantReply({ updateId, chatId, text, sentAt, day }) {
     await this.request("/messages", {
       method: "POST",

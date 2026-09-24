@@ -18,6 +18,8 @@ test("필수 서버 설정을 읽고 안전한 기본값을 적용한다", () =>
   assert.equal(config.port, 3000);
   assert.equal(config.timeZone, "Asia/Seoul");
   assert.equal(config.dayBoundaryHour, 4);
+  assert.equal(config.conversation.historyLimit, 12);
+  assert.equal(config.conversation.maxContextChars, 6000);
   assert.equal(config.groq.model, "openai/gpt-oss-120b");
 });
 
@@ -29,5 +31,9 @@ test("필수 비밀값이 없으면 시작을 거부한다", () => {
 
 test("잘못된 경계 시간과 URL을 거부한다", () => {
   assert.throws(() => loadConfig({ ...valid, DAY_BOUNDARY_HOUR: "24" }), /DAY_BOUNDARY_HOUR/);
+  assert.throws(
+    () => loadConfig({ ...valid, CONVERSATION_HISTORY_LIMIT: "51" }),
+    /CONVERSATION_HISTORY_LIMIT/
+  );
   assert.throws(() => loadConfig({ ...valid, SUPABASE_URL: "not a url" }), /SUPABASE_URL/);
 });
