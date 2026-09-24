@@ -1,5 +1,7 @@
 # MindCompanion
 
+[![CI](https://github.com/JeongMin-D/dailyChat/actions/workflows/ci.yml/badge.svg)](https://github.com/JeongMin-D/dailyChat/actions/workflows/ci.yml)
+
 Telegram 대화를 근거 있는 개인 기록과 일기로 만드는 단일 사용자용 AI 라이프 로깅 서비스입니다.
 
 ## 현재 상태
@@ -17,6 +19,14 @@ M1 대화 수직 슬라이스가 Render에 배포돼 있습니다. KST 04:00 하
 ```bash
 npm test
 ```
+
+커밋 전 CI와 동일한 전체 품질 검사를 실행합니다.
+
+```bash
+npm run check
+```
+
+이 명령은 ESLint, JavaScript typecheck, 전체 단위 테스트를 순서대로 실행합니다.
 
 필수 환경변수를 설정한 뒤 Bot 서버를 실행합니다.
 

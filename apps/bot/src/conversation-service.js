@@ -7,6 +7,16 @@ function errorCode(error) {
   return "CONVERSATION_FAILED";
 }
 
+/**
+ * @param {{
+ *   config: any,
+ *   store: any,
+ *   llm: any,
+ *   telegram: any,
+ *   systemPrompt: string,
+ *   logger?: Pick<import("../../../packages/observability/src/json-logger.js").JsonLogger, "error">
+ * }} options
+ */
 export function createConversationService({
   config,
   store,
@@ -16,7 +26,7 @@ export function createConversationService({
   logger = console
 }) {
   return {
-    async handle({ secret, update, requestId }) {
+    async handle({ secret, update, requestId = undefined }) {
       if (!isValidWebhookSecret(secret, config.telegram.webhookSecret)) {
         return { status: 401, result: "unauthorized" };
       }

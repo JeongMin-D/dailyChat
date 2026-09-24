@@ -11,8 +11,8 @@ updated: 2026-09-24
 ## 현재 포커스
 
 - 현재 단계: M1 검증 중
-- 다음 작업: A07 GitHub Actions 자동 테스트
-- 후속 작업: B08 429·5xx·네트워크 오류 backoff 재시도
+- 다음 작업: B08 429·5xx·네트워크 오류 backoff 재시도
+- 후속 작업: M1 DB 실패 포함 종단 실패 시나리오
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
@@ -23,7 +23,7 @@ updated: 2026-09-24
 - [x] A04 Supabase 개발 프로젝트 `dailyChat` 생성 및 연결
 - [/] A05 기존 `schema.sql`을 순차 migration으로 변환 — foundation 및 보안 migration 3개 적용
 - [x] A06 공통 오류 형식, request ID, JSON logger 구성
-- [ ] A07 CI에서 lint, typecheck, unit test 실행
+- [x] A07 CI에서 lint, typecheck, unit test 실행 — Node 24, npm ci, npm run check
 
 ## EPIC B — Telegram 대화
 

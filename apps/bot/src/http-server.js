@@ -7,9 +7,7 @@ async function readJson(request, limitBytes) {
   for await (const chunk of request) {
     size += chunk.length;
     if (size > limitBytes) {
-      const error = new Error("Request body too large");
-      error.status = 413;
-      throw error;
+      throw Object.assign(new Error("Request body too large"), { status: 413 });
     }
     chunks.push(chunk);
   }
@@ -41,6 +39,13 @@ function conversationError(result, requestId) {
   return errorBody("CONVERSATION_FAILED", "Request could not be completed", requestId);
 }
 
+/**
+ * @param {{
+ *   conversation: {handle(input: object): Promise<{status: number, result: string}>},
+ *   bodyLimitBytes: number,
+ *   logger?: Pick<import("../../../packages/observability/src/json-logger.js").JsonLogger, "info" | "error">
+ * }} options
+ */
 export function createHttpServer({ conversation, bodyLimitBytes, logger = console }) {
   return createServer(async (request, response) => {
     const requestId = requestIdFrom(request.headers["x-request-id"]);
@@ -76,7 +81,12 @@ export function createHttpServer({ conversation, bodyLimitBytes, logger = consol
         ? send(result.status, conversationError(result, requestId))
         : send(result.status, { result: result.result });
     } catch (error) {
-      const status = error instanceof SyntaxError ? 400 : error.status || 500;
+      const status = error instanceof SyntaxError
+        ? 400
+        : error && typeof error === "object" && "status" in error
+          && typeof error.status === "number"
+          ? error.status
+          : 500;
       const code = status === 400
         ? "INVALID_JSON"
         : status === 413 ? "PAYLOAD_TOO_LARGE" : "REQUEST_FAILED";

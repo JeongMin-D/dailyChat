@@ -2,6 +2,14 @@ const LEVELS = Object.freeze({ debug: 10, info: 20, warn: 30, error: 40 });
 const SENSITIVE_KEY = /(token|secret|authorization|api.?key|service.?role|content|text)/i;
 const MAX_STRING_LENGTH = 1_000;
 
+/**
+ * @typedef {object} JsonLogger
+ * @property {(event: string, fields?: Record<string, unknown>) => void} debug
+ * @property {(event: string, fields?: Record<string, unknown>) => void} info
+ * @property {(event: string, fields?: Record<string, unknown>) => void} warn
+ * @property {(event: string, fields?: Record<string, unknown>) => void} error
+ */
+
 function sanitize(value, key = "", depth = 0) {
   if (SENSITIVE_KEY.test(key)) return "[REDACTED]";
   if (value instanceof Error) return { name: value.name };
@@ -21,6 +29,15 @@ function sanitize(value, key = "", depth = 0) {
   );
 }
 
+/**
+ * @param {{
+ *   service: string,
+ *   level?: "debug" | "info" | "warn" | "error",
+ *   sink?: Pick<Console, "debug" | "info" | "warn" | "error" | "log">,
+ *   now?: () => Date
+ * }} options
+ * @returns {JsonLogger}
+ */
 export function createJsonLogger({
   service,
   level = "info",
@@ -44,9 +61,9 @@ export function createJsonLogger({
   }
 
   return Object.freeze({
-    debug: (event, fields) => write("debug", event, fields),
-    info: (event, fields) => write("info", event, fields),
-    warn: (event, fields) => write("warn", event, fields),
-    error: (event, fields) => write("error", event, fields)
+    debug: (event, fields = {}) => write("debug", event, fields),
+    info: (event, fields = {}) => write("info", event, fields),
+    warn: (event, fields = {}) => write("warn", event, fields),
+    error: (event, fields = {}) => write("error", event, fields)
   });
 }
