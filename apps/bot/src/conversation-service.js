@@ -16,7 +16,7 @@ export function createConversationService({
   logger = console
 }) {
   return {
-    async handle({ secret, update }) {
+    async handle({ secret, update, requestId }) {
       if (!isValidWebhookSecret(secret, config.telegram.webhookSecret)) {
         return { status: 401, result: "unauthorized" };
       }
@@ -80,11 +80,12 @@ export function createConversationService({
           await store.failUpdate(message.updateId, code, true);
         } catch (statusError) {
           logger.error("telegram_update_status_failed", {
+            requestId,
             updateId: message.updateId,
-            error: statusError?.message
+            errorName: statusError?.name || "Error"
           });
         }
-        logger.error("conversation_failed", { updateId: message.updateId, code });
+        logger.error("conversation_failed", { requestId, updateId: message.updateId, code });
         return { status: 500, result: "retryable_failure" };
       }
     }

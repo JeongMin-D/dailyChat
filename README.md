@@ -28,6 +28,8 @@ npm run start:bot
 
 - 상태 확인: `GET /health`
 - Telegram webhook: `POST /telegram/webhook`
+- 모든 HTTP 응답: `X-Request-ID` 헤더
+- 오류 응답: `{ "error": { "code", "message", "requestId" } }`
 
 외부 서비스 연결 상태를 비밀값 출력 없이 확인합니다.
 

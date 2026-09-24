@@ -16,6 +16,7 @@ const valid = {
 test("필수 서버 설정을 읽고 안전한 기본값을 적용한다", () => {
   const config = loadConfig(valid);
   assert.equal(config.port, 3000);
+  assert.equal(config.logLevel, "info");
   assert.equal(config.timeZone, "Asia/Seoul");
   assert.equal(config.dayBoundaryHour, 4);
   assert.equal(config.conversation.historyLimit, 12);
@@ -35,5 +36,6 @@ test("잘못된 경계 시간과 URL을 거부한다", () => {
     () => loadConfig({ ...valid, CONVERSATION_HISTORY_LIMIT: "51" }),
     /CONVERSATION_HISTORY_LIMIT/
   );
+  assert.throws(() => loadConfig({ ...valid, LOG_LEVEL: "verbose" }), /LOG_LEVEL/);
   assert.throws(() => loadConfig({ ...valid, SUPABASE_URL: "not a url" }), /SUPABASE_URL/);
 });

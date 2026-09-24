@@ -24,9 +24,18 @@ function url(env, name, fallback) {
   }
 }
 
+function choice(env, name, fallback, allowed) {
+  const value = env[name]?.trim() || fallback;
+  if (!allowed.includes(value)) {
+    throw new Error(`${name} must be one of: ${allowed.join(", ")}`);
+  }
+  return value;
+}
+
 export function loadConfig(env = process.env) {
   return Object.freeze({
     port: integer(env, "PORT", 3000, { min: 1, max: 65535 }),
+    logLevel: choice(env, "LOG_LEVEL", "info", ["debug", "info", "warn", "error"]),
     bodyLimitBytes: integer(env, "HTTP_BODY_LIMIT_BYTES", 1_048_576, {
       min: 1_024,
       max: 10_485_760

@@ -15,7 +15,7 @@ updated: 2026-09-24
 - [x] A03 비밀정보 목록 및 `.env.example` 작성
 - [x] A04 Supabase 개발 프로젝트 `dailyChat` 생성 및 연결
 - [/] A05 기존 `schema.sql`을 순차 migration으로 변환 — foundation 및 보안 migration 3개 적용
-- [ ] A06 공통 오류 형식, request ID, JSON logger 구성
+- [x] A06 공통 오류 형식, request ID, JSON logger 구성
 - [ ] A07 CI에서 lint, typecheck, unit test 실행
 
 ## EPIC B — Telegram 대화
@@ -79,7 +79,7 @@ updated: 2026-09-24
 
 - [ ] G01 모든 테이블 RLS 및 부정 테스트
 - [ ] G02 service role 브라우저 번들 미포함 검사
-- [ ] G03 로그 개인정보 마스킹
+- [/] G03 로그 개인정보 마스킹 — 공통 logger 필드 마스킹 구현, 전체 로그 감사 대기
 - [ ] G04 프롬프트 인젝션 회귀 테스트
 - [ ] G05 DB 백업 자동화
 - [ ] G06 빈 환경에서 복구 리허설
