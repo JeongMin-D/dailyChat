@@ -61,3 +61,12 @@ outbox에는 사용자 원문이나 일기 본문을 복제하지 않습니다. 
 - RLS와 server-only 명시 권한
 
 `none` 판정은 저장하지 않습니다. safety 테이블에는 원문 인용, 진단명, 자유 형식 추론, 일기·건강 내용을 넣지 않습니다. source snapshot 소속, reason code 중복, 부모당 최소 근거는 Worker의 저장 전 검증과 같은 트랜잭션에서 강제합니다.
+
+## 메시지 시간 경계 무결성
+
+`0007_message_day_integrity.sql`은 원문 시각과 local day가 어긋난 메시지 저장을 차단합니다.
+
+- `messages.sent_at`은 실제 시각을 `timestamptz`로 저장하고 DB timezone은 UTC를 유지
+- `messages.day`는 `settings.timezone`과 `day_boundary_hour`로 계산한 `date`
+- insert 또는 `sent_at`/`day` update 때 `local_day()` 결과와 supplied day 대조
+- trigger 함수는 `SECURITY INVOKER`이며 Data API 역할의 직접 실행 권한 없음

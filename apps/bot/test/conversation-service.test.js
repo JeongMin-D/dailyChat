@@ -108,6 +108,27 @@ test("사용자 원문을 LLM 호출 전에 저장하고 응답을 전송한다"
   ]);
 });
 
+test("Telegram UTC 시각을 KST 04:00 경계의 local day로 저장한다", async () => {
+  const cases = [
+    ["2026-09-23T18:59:59.000Z", "2026-09-23"],
+    ["2026-09-23T19:00:00.000Z", "2026-09-24"]
+  ];
+
+  for (const [sentAt, expectedDay] of cases) {
+    const { service, calls } = setup();
+    const telegramDate = Math.floor(Date.parse(sentAt) / 1000);
+
+    await service.handle({
+      secret: "test-secret",
+      update: update({ date: telegramDate })
+    });
+
+    const saved = calls.find(([name]) => name === "save-user")[1];
+    assert.equal(saved.sentAt.toISOString(), sentAt);
+    assert.equal(saved.day, expectedDay);
+  }
+});
+
 test("최근 대화를 시간 순서대로 SOUL 프롬프트와 함께 전달한다", async () => {
   const history = [
     { role: "user", content: "아침부터 문제가 있었어" },

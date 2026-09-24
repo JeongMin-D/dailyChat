@@ -17,7 +17,8 @@ updated: 2026-09-25
 - 완료: C03 core domain과 복수 원문 근거 연결 테이블 migration
 - 완료: C04 `job_runs` claim 보강과 reference-only `notification_outbox`
 - 완료: C05 제한 safety 원장과 provider/model/prompt/schema/input 재현 metadata
-- 다음 작업: C06 UTC 저장과 KST 04:00 DB 통합 검증
+- 완료: C06 UTC 저장과 KST 04:00 DB 무결성 검증
+- 다음 작업: D01 처리 local day 선택과 D02 message snapshot/hash 생성
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
@@ -26,7 +27,7 @@ updated: 2026-09-25
 - [x] A02 저장소 디렉터리와 환경별 설정 구성
 - [x] A03 비밀정보 목록 및 `.env.example` 작성
 - [x] A04 Supabase 개발 프로젝트 `dailyChat` 생성 및 연결
-- [/] A05 기존 `schema.sql`을 순차 migration으로 변환 — foundation부터 safety까지 migration 6개 적용
+- [/] A05 기존 `schema.sql`을 순차 migration으로 변환 — foundation부터 시간 경계 무결성까지 migration 7개 적용
 - [x] A06 공통 오류 형식, request ID, JSON logger 구성
 - [x] A07 CI에서 lint, typecheck, unit test 실행 — Node 24, npm ci, npm run check
 - [x] A08 ADR-001~006 P0 결정 승인 — 공급자·하루 경계·기억 원장·근거·런타임·안전
@@ -51,7 +52,7 @@ updated: 2026-09-25
 - [x] C03 복수 원문 근거 연결 테이블 추가 — core 5개·근거 5개, RLS·권한·FK 실DB 검증
 - [x] C04 `job_runs`, `notification_outbox` 추가 — 원자적 claim·stale 회수·멱등 제약·server-only 검증
 - [x] C05 safety level/reason/checker, prompt/model version, input hash 저장 — 제한 컬럼·SHA-256·원문 FK 실DB 검증
-- [ ] C06 UTC 저장과 KST 04:00 경계 단위 테스트
+- [x] C06 UTC 저장과 KST 04:00 경계 단위 테스트 — 앱·DB 경계 일치, message day trigger, 실DB rollback 검증
 
 ## EPIC D — 야간 파이프라인
 
