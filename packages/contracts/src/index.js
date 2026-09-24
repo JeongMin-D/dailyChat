@@ -11,6 +11,7 @@ export { nightlyDatabaseContract } from "./database-contract.js";
 
 export {
   jobRunReproducibilityContract,
+  nightlyInputSnapshotContract,
   jobRunStatuses,
   jobRunTransitions,
   notificationOutboxContract,

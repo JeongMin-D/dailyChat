@@ -63,3 +63,12 @@ export const jobRunReproducibilityContract = {
   provider: "groq",
   schemaVersions: ["1.0.0"]
 };
+
+export const nightlyInputSnapshotContract = {
+  version: "1",
+  role: "user",
+  messageFields: ["id", "sentAt", "content"],
+  order: ["sentAt", "id"],
+  serialization: "utf8-json",
+  hash: jobRunReproducibilityContract.inputHash
+};

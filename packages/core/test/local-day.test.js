@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { getLocalDay } from "../src/time/local-day.js";
+import { getLastClosedLocalDay, getLocalDay } from "../src/time/local-day.js";
 
 test("KST 04:00 직전은 전날 기록에 포함한다", () => {
   assert.equal(getLocalDay("2026-09-23T18:59:59.999Z"), "2026-09-23");
@@ -63,5 +63,19 @@ test("잘못된 시간대 이름을 거부한다", () => {
   assert.throws(
     () => getLocalDay(Date.now(), { timeZone: "Invalid/Zone" }),
     RangeError
+  );
+});
+
+test("경계 직후에는 방금 닫힌 전날을 처리 대상으로 선택한다", () => {
+  assert.equal(
+    getLastClosedLocalDay("2026-09-23T19:05:00.000Z"),
+    "2026-09-23"
+  );
+});
+
+test("경계 전에는 아직 열린 local day보다 하루 전을 선택한다", () => {
+  assert.equal(
+    getLastClosedLocalDay("2026-09-23T18:59:59.000Z"),
+    "2026-09-22"
   );
 });

@@ -55,3 +55,17 @@ export function getLocalDay(value, options = {}) {
 
   return localDayDate.toISOString().slice(0, 10);
 }
+
+/**
+ * 주어진 시각에 완전히 닫힌 가장 최근 local day를 반환한다.
+ * Worker는 이 값을 job day로 명시해 늦은 실행과 재시도에서 같은 날짜를 유지한다.
+ *
+ * @param {Date|string|number} value 유효한 시각
+ * @param {{timeZone?: string, boundaryHour?: number}} [options]
+ */
+export function getLastClosedLocalDay(value, options = {}) {
+  const currentLocalDay = getLocalDay(value, options);
+  const [year, month, day] = currentLocalDay.split("-").map(Number);
+  const previousDay = new Date(Date.UTC(year, month - 1, day) - MILLIS_PER_DAY);
+  return previousDay.toISOString().slice(0, 10);
+}

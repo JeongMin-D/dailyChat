@@ -57,7 +57,9 @@ JSON Schema 검증 뒤 의미 검증을 추가로 수행한다.
 
 DB claim 함수는 예약 시간이 지난 `queued|retryable_failed` 작업만 원자적으로 가져간다. 오래 멈춘 `running|sending`은 5분 뒤 회수할 수 있다. 외부 전송의 성공·실패 갱신과 재시도 backoff는 D09 Worker가 이 상태 계약 위에서 구현한다.
 
-`jobRunReproducibilityContract`는 nightly 작업이 반드시 기록해야 할 `day`, pipeline/input hash, provider/model, prompt/schema version을 정의한다. input hash는 입력 snapshot을 canonical form으로 직렬화한 뒤 계산하는 lowercase SHA-256 hex다. 실제 canonical snapshot 생성은 D02에서 구현한다.
+`jobRunReproducibilityContract`는 nightly 작업이 반드시 기록해야 할 `day`, pipeline/input hash, provider/model, prompt/schema version을 정의한다. input hash는 입력 snapshot을 canonical form으로 직렬화한 뒤 계산하는 lowercase SHA-256 hex며 `workers/nightly/src/nightly-input.js`에서 생성한다.
+
+`nightlyInputSnapshotContract`는 D02 입력의 version, user-only 범위, message 필드, `sentAt → id` 정렬, UTF-8 JSON 직렬화와 SHA-256 규칙을 고정한다. snapshot 원문은 Worker 실행 메모리에서만 사용하고 `job_runs`에는 hash와 재현 metadata만 저장한다.
 
 ## 후속 계약
 

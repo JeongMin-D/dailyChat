@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   jobRunReproducibilityContract,
+  nightlyInputSnapshotContract,
   nightlyDatabaseContract,
   nightlyExtractionSchema
 } from "../src/index.js";
@@ -41,4 +42,13 @@ test("safety none은 저장하지 않고 제한 등급만 영속화한다", () =
   assert.ok(nightlyDatabaseContract.applicationRules.includes(
     "Do not persist a safety row when level is none."
   ));
+});
+
+test("nightly input snapshot의 canonical 필드와 정렬을 고정한다", () => {
+  assert.equal(nightlyInputSnapshotContract.version, "1");
+  assert.equal(nightlyInputSnapshotContract.role, "user");
+  assert.deepEqual(nightlyInputSnapshotContract.messageFields, ["id", "sentAt", "content"]);
+  assert.deepEqual(nightlyInputSnapshotContract.order, ["sentAt", "id"]);
+  assert.equal(nightlyInputSnapshotContract.serialization, "utf8-json");
+  assert.equal(nightlyInputSnapshotContract.hash.algorithm, "sha256");
 });
