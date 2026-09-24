@@ -16,11 +16,15 @@ const store = new SupabaseMessageStore({
 });
 const llm = new GroqProvider({
   ...config.groq,
-  timeoutMs: config.upstreamTimeoutMs
+  timeoutMs: config.upstreamTimeoutMs,
+  retry: config.upstreamRetry,
+  logger
 });
 const telegram = new TelegramClient({
   token: config.telegram.token,
-  timeoutMs: config.upstreamTimeoutMs
+  timeoutMs: config.upstreamTimeoutMs,
+  retry: config.upstreamRetry,
+  logger
 });
 const conversation = createConversationService({
   config,

@@ -1,14 +1,18 @@
+import { fetchWithRetry } from "./upstream-retry.js";
+
 export class GroqProvider {
-  constructor({ apiKey, baseUrl, model, timeoutMs, fetchImpl = fetch }) {
+  constructor({ apiKey, baseUrl, model, timeoutMs, retry, fetchImpl = fetch, logger = null }) {
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
     this.model = model;
     this.timeoutMs = timeoutMs;
+    this.retry = retry;
     this.fetch = fetchImpl;
+    this.logger = logger;
   }
 
   async generateReply({ messages }) {
-    const response = await this.fetch(`${this.baseUrl}/chat/completions`, {
+    const response = await fetchWithRetry(`${this.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         authorization: `Bearer ${this.apiKey}`,
@@ -18,8 +22,15 @@ export class GroqProvider {
         model: this.model,
         messages,
         temperature: 0.7
-      }),
-      signal: AbortSignal.timeout(this.timeoutMs)
+      })
+    }, {
+      timeoutMs: this.timeoutMs,
+      ...this.retry,
+      fetchImpl: this.fetch,
+      onRetry: (details) => this.logger?.warn("upstream_retry_scheduled", {
+        upstream: "groq",
+        ...details
+      })
     });
 
     if (!response.ok) {

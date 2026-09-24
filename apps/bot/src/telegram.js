@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
+import { fetchWithRetry } from "./upstream-retry.js";
 
 export function isValidWebhookSecret(received, expected) {
   if (typeof received !== "string" || typeof expected !== "string") return false;
@@ -33,18 +34,27 @@ export function parseTextUpdate(update) {
 }
 
 export class TelegramClient {
-  constructor({ token, timeoutMs, fetchImpl = fetch }) {
+  constructor({ token, timeoutMs, retry, fetchImpl = fetch, logger = null }) {
     this.baseUrl = `https://api.telegram.org/bot${token}`;
     this.timeoutMs = timeoutMs;
+    this.retry = retry;
     this.fetch = fetchImpl;
+    this.logger = logger;
   }
 
   async sendText(chatId, text) {
-    const response = await this.fetch(`${this.baseUrl}/sendMessage`, {
+    const response = await fetchWithRetry(`${this.baseUrl}/sendMessage`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text }),
-      signal: AbortSignal.timeout(this.timeoutMs)
+      body: JSON.stringify({ chat_id: chatId, text })
+    }, {
+      timeoutMs: this.timeoutMs,
+      ...this.retry,
+      fetchImpl: this.fetch,
+      onRetry: (details) => this.logger?.warn("upstream_retry_scheduled", {
+        upstream: "telegram",
+        ...details
+      })
     });
 
     if (!response.ok) {

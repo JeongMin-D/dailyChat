@@ -21,4 +21,6 @@ Webhook은 `X-Telegram-Bot-Api-Secret-Token`을 검증하고 허용된 user/chat
 
 실패한 update는 `retryable_failed`로 남기며 Telegram 재전송 시 저장된 assistant 응답을 재사용합니다.
 
+Groq와 Telegram의 429·5xx·네트워크 오류·timeout은 지수 backoff와 jitter로 제한 재시도합니다. `Retry-After` 헤더와 Telegram `parameters.retry_after`를 우선하되 최대 지연을 넘기지 않습니다. 인증·권한 등 다른 4xx는 재시도하지 않으며, 각 재시도는 `upstream_retry_scheduled` 경고 로그에 upstream, attempt, delay, status 또는 오류 이름을 남깁니다.
+
 기본 Context 제한은 최근 12개 메시지와 총 6,000자입니다. 각각 `CONVERSATION_HISTORY_LIMIT`, `CONVERSATION_CONTEXT_CHARS`로 조정할 수 있습니다.

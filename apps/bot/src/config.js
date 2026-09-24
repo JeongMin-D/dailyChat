@@ -33,6 +33,15 @@ function choice(env, name, fallback, allowed) {
 }
 
 export function loadConfig(env = process.env) {
+  const upstreamRetry = {
+    maxAttempts: integer(env, "UPSTREAM_RETRY_MAX_ATTEMPTS", 3, { min: 1, max: 5 }),
+    baseDelayMs: integer(env, "UPSTREAM_RETRY_BASE_DELAY_MS", 250, { min: 0, max: 10_000 }),
+    maxDelayMs: integer(env, "UPSTREAM_RETRY_MAX_DELAY_MS", 2_000, { min: 0, max: 30_000 })
+  };
+  if (upstreamRetry.maxDelayMs < upstreamRetry.baseDelayMs) {
+    throw new Error("UPSTREAM_RETRY_MAX_DELAY_MS must be greater than or equal to UPSTREAM_RETRY_BASE_DELAY_MS");
+  }
+
   return Object.freeze({
     port: integer(env, "PORT", 3000, { min: 1, max: 65535 }),
     logLevel: choice(env, "LOG_LEVEL", "info", ["debug", "info", "warn", "error"]),
@@ -44,6 +53,7 @@ export function loadConfig(env = process.env) {
       min: 1_000,
       max: 120_000
     }),
+    upstreamRetry: Object.freeze(upstreamRetry),
     timeZone: env.APP_TIMEZONE?.trim() || "Asia/Seoul",
     dayBoundaryHour: integer(env, "DAY_BOUNDARY_HOUR", 4, { min: 0, max: 23 }),
     conversation: {

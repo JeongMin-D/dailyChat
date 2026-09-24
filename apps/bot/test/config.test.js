@@ -22,6 +22,11 @@ test("필수 서버 설정을 읽고 안전한 기본값을 적용한다", () =>
   assert.equal(config.conversation.historyLimit, 12);
   assert.equal(config.conversation.maxContextChars, 6000);
   assert.equal(config.groq.model, "openai/gpt-oss-120b");
+  assert.deepEqual(config.upstreamRetry, {
+    maxAttempts: 3,
+    baseDelayMs: 250,
+    maxDelayMs: 2000
+  });
 });
 
 test("필수 비밀값이 없으면 시작을 거부한다", () => {
@@ -38,4 +43,12 @@ test("잘못된 경계 시간과 URL을 거부한다", () => {
   );
   assert.throws(() => loadConfig({ ...valid, LOG_LEVEL: "verbose" }), /LOG_LEVEL/);
   assert.throws(() => loadConfig({ ...valid, SUPABASE_URL: "not a url" }), /SUPABASE_URL/);
+  assert.throws(
+    () => loadConfig({
+      ...valid,
+      UPSTREAM_RETRY_BASE_DELAY_MS: "1000",
+      UPSTREAM_RETRY_MAX_DELAY_MS: "500"
+    }),
+    /UPSTREAM_RETRY_MAX_DELAY_MS/
+  );
 });

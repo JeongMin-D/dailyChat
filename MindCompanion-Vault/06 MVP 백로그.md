@@ -11,8 +11,8 @@ updated: 2026-09-24
 ## 현재 포커스
 
 - 현재 단계: M1 검증 중
-- 다음 작업: B08 429·5xx·네트워크 오류 backoff 재시도
-- 후속 작업: M1 DB 실패 포함 종단 실패 시나리오
+- 다음 작업: M1 DB 실패 포함 종단 실패 시나리오
+- 후속 작업: M1 수용 기준·로그·보안·문서 종료 검토
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
@@ -34,7 +34,7 @@ updated: 2026-09-24
 - [x] B05 Groq provider 인터페이스 구현
 - [x] B06 SOUL 프롬프트와 컨텍스트 빌더 구현 — 최근 12개·6,000자 제한
 - [x] B07 assistant 메시지 저장 후 전송
-- [/] B08 timeout·429·5xx 재시도 테스트 — timeout과 Telegram 재전송 경로 구현, backoff 대기
+- [x] B08 timeout·429·5xx 재시도 테스트 — Groq·Telegram bounded exponential backoff, jitter, Retry-After, 4xx 제외
 - [x] B09 비허용 사용자 무응답/차단 테스트
 
 ## EPIC C — 데이터 계약

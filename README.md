@@ -6,7 +6,7 @@ Telegram 대화를 근거 있는 개인 기록과 일기로 만드는 단일 사
 
 ## 현재 상태
 
-M1 대화 수직 슬라이스가 Render에 배포돼 있습니다. KST 04:00 하루 경계, Telegram webhook 인증, 허용 사용자 검사, 메시지 선저장, SOUL 프롬프트, 제한된 최근 대화 컨텍스트, Groq 응답, Telegram 전송 및 실패 재처리 경로가 구현돼 있습니다.
+M1 대화 수직 슬라이스가 Render에 배포돼 있습니다. KST 04:00 하루 경계, Telegram webhook 인증, 허용 사용자 검사, 메시지 선저장, SOUL 프롬프트, 제한된 최근 대화 컨텍스트, Groq 응답, Telegram 전송 및 일시적 외부 오류 재시도 경로가 구현돼 있습니다.
 
 ## 요구 환경
 
@@ -40,6 +40,8 @@ npm run start:bot
 - Telegram webhook: `POST /telegram/webhook`
 - 모든 HTTP 응답: `X-Request-ID` 헤더
 - 오류 응답: `{ "error": { "code", "message", "requestId" } }`
+
+Groq와 Telegram 호출은 429, 5xx, 네트워크 오류 및 timeout에서만 bounded exponential backoff와 jitter를 적용합니다. 기본값은 총 3회 시도, 250ms 시작, 최대 2초 지연이며 `.env.example`의 `UPSTREAM_RETRY_*` 값으로 조정할 수 있습니다.
 
 외부 서비스 연결 상태를 비밀값 출력 없이 확인합니다.
 
