@@ -11,8 +11,8 @@ updated: 2026-09-24
 ## 현재 포커스
 
 - 현재 단계: M1 검증 중
-- 다음 작업: M1 DB 실패 포함 종단 실패 시나리오
-- 후속 작업: M1 수용 기준·로그·보안·문서 종료 검토
+- 다음 작업: M1 수용 기준·로그·보안·문서 종료 검토
+- 후속 작업: M2 착수 전 ADR과 데이터 계약 확정
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
@@ -36,6 +36,7 @@ updated: 2026-09-24
 - [x] B07 assistant 메시지 저장 후 전송
 - [x] B08 timeout·429·5xx 재시도 테스트 — Groq·Telegram bounded exponential backoff, jitter, Retry-After, 4xx 제외
 - [x] B09 비허용 사용자 무응답/차단 테스트
+- [x] B10 DB 실패 종단 시나리오 — claim·user 저장·assistant 저장·완료 상태 기록 장애와 재전달 검증
 
 ## EPIC C — 데이터 계약
 
