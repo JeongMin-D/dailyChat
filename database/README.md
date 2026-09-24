@@ -48,3 +48,16 @@ npm run setup:supabase
 - 원자적 `claim_notification`, RLS, server-only 권한
 
 outbox에는 사용자 원문이나 일기 본문을 복제하지 않습니다. 실제 전송 Worker는 `diary_id`로 내용을 읽고, 성공 시 provider message ID와 sent 시각만 기록합니다.
+
+## Safety와 실행 재현 정보
+
+`0006_safety_reproducibility.sql`은 nightly 실행을 재현할 수 있는 식별 정보와 제한된 safety metadata를 추가합니다.
+
+- nightly job의 day, pipeline/input hash, provider/model, prompt/schema version 필수화
+- lowercase SHA-256 input hash 형식 검사
+- `concern|urgent`만 저장하는 `safety_assessments`
+- 제한 reason code, checker version, 판정 시각
+- 원문을 복제하지 않는 `safety_message_sources` FK 관계
+- RLS와 server-only 명시 권한
+
+`none` 판정은 저장하지 않습니다. safety 테이블에는 원문 인용, 진단명, 자유 형식 추론, 일기·건강 내용을 넣지 않습니다. source snapshot 소속, reason code 중복, 부모당 최소 근거는 Worker의 저장 전 검증과 같은 트랜잭션에서 강제합니다.

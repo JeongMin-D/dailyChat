@@ -43,3 +43,23 @@ export const notificationOutboxContract = {
   staleClaimStatus: "sending",
   staleAfterMinutes: 5
 };
+
+export const jobRunReproducibilityContract = {
+  nightlyJobType: "nightly",
+  requiredFields: [
+    "day",
+    "pipeline_version",
+    "input_hash",
+    "provider",
+    "model",
+    "prompt_version",
+    "schema_version"
+  ],
+  inputHash: {
+    algorithm: "sha256",
+    encoding: "lowercase-hex",
+    pattern: "^[0-9a-f]{64}$"
+  },
+  provider: "groq",
+  schemaVersions: ["1.0.0"]
+};
