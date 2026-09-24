@@ -1,6 +1,8 @@
 -- =====================================================================
--- MindCompanion (개인용) Supabase / PostgreSQL 스키마
--- 사용법: Supabase 대시보드 > SQL Editor 에 통째로 붙여넣고 실행
+-- LEGACY PROPOSAL REFERENCE — 운영/개발 DB에 실행하지 않는다.
+-- 실제 스키마의 원본은 database/migrations/이며 번호 순서대로 적용한다.
+-- 이 파일에는 단일 message_id, 23:30 diary, memory mirror 같은 폐기된
+-- 제안이 남아 있어 현재 ADR 및 packages/contracts 계약과 일치하지 않는다.
 -- 전제: 사용자는 나 한 명. 쓰기는 게이트웨이 서버(service_role 키),
 --       읽기는 대시보드(내 이메일로 로그인)만 가능.
 -- =====================================================================

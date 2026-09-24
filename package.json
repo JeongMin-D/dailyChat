@@ -11,6 +11,7 @@
   "scripts": {
     "setup:supabase": "node scripts/init-supabase-settings.js",
     "smoke:connections": "node scripts/check-external-services.js",
+    "smoke:contract": "node scripts/check-groq-contract.js",
     "start:bot": "npm --workspace @mindcompanion/bot start",
     "lint": "eslint .",
     "typecheck": "tsc --project tsconfig.json",

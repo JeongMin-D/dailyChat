@@ -1,0 +1,13 @@
+{
+  "name": "@mindcompanion/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./schemas": "./src/schemas.js"
+  },
+  "dependencies": {
+    "ajv": "8.20.0"
+  }
+}
