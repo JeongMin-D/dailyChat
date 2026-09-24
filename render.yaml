@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: dailychat-bot
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci
+    startCommand: npm run start:bot
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_TIMEZONE
+        value: Asia/Seoul
+      - key: DAY_BOUNDARY_HOUR
+        value: "4"
+      - key: DIARY_FINAL_TIME
+        value: "04:05"
+      - key: HTTP_BODY_LIMIT_BYTES
+        value: "1048576"
+      - key: UPSTREAM_TIMEOUT_MS
+        value: "15000"
+      - key: GROQ_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: GROQ_CHAT_MODEL
+        value: openai/gpt-oss-120b
+      - key: SUPABASE_URL
+        value: https://ofximcgkhherplhvwkny.supabase.co
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false
+      - key: TELEGRAM_ALLOWED_USER_ID
+        sync: false
+      - key: TELEGRAM_ALLOWED_CHAT_ID
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

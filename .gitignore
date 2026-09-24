@@ -1,0 +1,24 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+.npm/
+coverage/
+dist/
+.next/
+
+# Runtime
+*.log
+tmp/
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Supabase local state
+.supabase/

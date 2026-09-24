@@ -1,0 +1,9 @@
+{
+  "name": "@mindcompanion/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./time": "./src/time/local-day.js"
+  }
+}

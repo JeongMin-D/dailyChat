@@ -1,0 +1,22 @@
+{
+  "name": "mindcompanion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "workers/*"
+  ],
+  "scripts": {
+    "setup:supabase": "node scripts/init-supabase-settings.js",
+    "smoke:connections": "node scripts/check-external-services.js",
+    "start:bot": "npm --workspace @mindcompanion/bot start",
+    "test": "node --test",
+    "test:watch": "node --test --watch",
+    "check": "npm test"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}
