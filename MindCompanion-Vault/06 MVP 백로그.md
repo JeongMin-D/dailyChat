@@ -20,7 +20,7 @@ updated: 2026-09-24
 
 ## EPIC B — Telegram 대화
 
-- [x] B01 Bot HTTP endpoint 및 webhook 검증 구현 — 실제 Bot 등록은 환경설정 후 수행
+- [x] B01 Bot HTTP endpoint 구현, Telegram webhook 등록 및 실대화 검증
 - [x] B02 Telegram update 멱등 키 저장
 - [x] B03 허용 `chat_id`/`user_id` 이중 검사
 - [x] B04 user 메시지를 응답 전에 저장
