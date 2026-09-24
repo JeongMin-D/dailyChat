@@ -24,3 +24,15 @@ npm run setup:supabase
 ```
 
 스크립트는 실제 값이나 비밀키를 출력하지 않고 설정 여부만 검증합니다.
+
+## Core domain과 근거 관계
+
+`0004_core_domain_sources.sql`은 C02 DB 계약을 구현합니다.
+
+- events, mood_entries, health_entries
+- versioned final diaries와 순서가 있는 diary_blocks
+- event/mood/health/diary block별 원문 근거 연결
+- diary block과 event의 검증된 근거 연결
+- 모든 테이블 RLS와 server-only 명시 권한
+
+원문 message 삭제는 연결된 파생 데이터를 먼저 처리하도록 `RESTRICT`합니다. 파생 부모를 삭제하면 그 부모의 연결 행만 `CASCADE`합니다. 입력 snapshot 소속과 부모당 최소 근거 1개는 단일 FK/CHECK로 표현하지 않고 Worker의 저장 전 검증과 같은 트랜잭션에서 강제합니다.
