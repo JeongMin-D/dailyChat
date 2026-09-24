@@ -49,7 +49,13 @@ JSON Schema 검증 뒤 의미 검증을 추가로 수행한다.
 - RLS를 켜고 `anon`/`authenticated` 권한은 회수하며 서버의 `service_role` 권한만 명시한다.
 - 배열 원소 중복, 입력 snapshot 소속, 부모당 최소 근거 수처럼 단일 CHECK로 안전하게 표현할 수 없는 규칙은 저장 전 검증과 같은 트랜잭션으로 강제한다.
 
-이 파일은 target 계약이다. C02에서는 운영 DB를 변경하지 않으며 실제 테이블과 제약 생성은 C03~C05 migration에서 수행한다.
+이 파일은 target 계약이다. C02에서 정의한 core 계약은 C03 migration으로, 작업·알림 계약은 C04 migration으로 운영 DB에 반영했다. safety와 재현 metadata는 C05 migration에서 이어서 적용한다.
+
+## 작업·알림 상태 계약
+
+`jobRunStatuses`, `notificationStatuses`와 각 transition map은 Worker가 사용하는 상태 계약이다. `notificationOutboxContract`는 outbox가 사용자 내용 대신 `job_run_id`와 `diary_id` 참조만 저장하고, 고유한 `idempotency_key`로 한 일기의 같은 알림을 한 번만 등록하도록 고정한다.
+
+DB claim 함수는 예약 시간이 지난 `queued|retryable_failed` 작업만 원자적으로 가져간다. 오래 멈춘 `running|sending`은 5분 뒤 회수할 수 있다. 외부 전송의 성공·실패 갱신과 재시도 backoff는 D09 Worker가 이 상태 계약 위에서 구현한다.
 
 ## 후속 계약
 

@@ -10,6 +10,14 @@ export {
 export { nightlyDatabaseContract } from "./database-contract.js";
 
 export {
+  jobRunStatuses,
+  jobRunTransitions,
+  notificationOutboxContract,
+  notificationStatuses,
+  notificationTransitions
+} from "./job-contract.js";
+
+export {
   assertNightlyExtraction,
   validateDiary,
   validateEvent,

@@ -36,3 +36,15 @@ npm run setup:supabase
 - 모든 테이블 RLS와 server-only 명시 권한
 
 원문 message 삭제는 연결된 파생 데이터를 먼저 처리하도록 `RESTRICT`합니다. 파생 부모를 삭제하면 그 부모의 연결 행만 `CASCADE`합니다. 입력 snapshot 소속과 부모당 최소 근거 1개는 단일 FK/CHECK로 표현하지 않고 Worker의 저장 전 검증과 같은 트랜잭션에서 강제합니다.
+
+## 작업 실행과 알림 outbox
+
+`0005_job_runs_notification_outbox.sql`은 작업 생성과 Telegram 전송 성공을 분리합니다.
+
+- `job_runs.available_at`, `updated_at`과 원자적 `claim_job_run`
+- 일기·작업 참조만 보관하는 `notification_outbox`
+- 고유 멱등 키와 일기별 Telegram final 알림 unique 제약
+- 예약된 pending/retryable 작업과 5분 이상 멈춘 claim 회수
+- 원자적 `claim_notification`, RLS, server-only 권한
+
+outbox에는 사용자 원문이나 일기 본문을 복제하지 않습니다. 실제 전송 Worker는 `diary_id`로 내용을 읽고, 성공 시 provider message ID와 sent 시각만 기록합니다.

@@ -15,7 +15,8 @@ updated: 2026-09-25
 - 완료: C01 event/mood/health/diary JSON Schema와 의미 검증
 - 완료: C02 DB 제약과 애플리케이션 타입 target 계약 및 자동 대조
 - 완료: C03 core domain과 복수 원문 근거 연결 테이블 migration
-- 다음 작업: C04 `job_runs` 보강과 `notification_outbox`
+- 완료: C04 `job_runs` claim 보강과 reference-only `notification_outbox`
+- 다음 작업: C05 safety와 prompt/model/schema 재현 metadata
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
@@ -24,7 +25,7 @@ updated: 2026-09-25
 - [x] A02 저장소 디렉터리와 환경별 설정 구성
 - [x] A03 비밀정보 목록 및 `.env.example` 작성
 - [x] A04 Supabase 개발 프로젝트 `dailyChat` 생성 및 연결
-- [/] A05 기존 `schema.sql`을 순차 migration으로 변환 — foundation·보안·core domain migration 4개 적용
+- [/] A05 기존 `schema.sql`을 순차 migration으로 변환 — foundation·보안·domain·outbox migration 5개 적용
 - [x] A06 공통 오류 형식, request ID, JSON logger 구성
 - [x] A07 CI에서 lint, typecheck, unit test 실행 — Node 24, npm ci, npm run check
 - [x] A08 ADR-001~006 P0 결정 승인 — 공급자·하루 경계·기억 원장·근거·런타임·안전
@@ -47,7 +48,7 @@ updated: 2026-09-25
 - [x] C01 event/mood/health/diary JSON Schema 확정 — Draft 2020-12, Ajv, Groq strict shape, 근거 의미 검증
 - [x] C02 DB 제약과 애플리케이션 타입 일치 — 컬럼·관계·삭제·권한 target 계약과 자동 대조
 - [x] C03 복수 원문 근거 연결 테이블 추가 — core 5개·근거 5개, RLS·권한·FK 실DB 검증
-- [ ] C04 `job_runs`, `notification_outbox` 추가
+- [x] C04 `job_runs`, `notification_outbox` 추가 — 원자적 claim·stale 회수·멱등 제약·server-only 검증
 - [ ] C05 safety level/reason/checker, prompt/model version, input hash 저장
 - [ ] C06 UTC 저장과 KST 04:00 경계 단위 테스트
 
