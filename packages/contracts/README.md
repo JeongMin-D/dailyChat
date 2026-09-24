@@ -39,6 +39,18 @@ JSON Schema 검증 뒤 의미 검증을 추가로 수행한다.
 
 실제 Groq strict mode와 현재 모델의 호환성은 로컬 `.env`가 있는 환경에서 `npm run smoke:contract`로 확인한다. 이 명령은 비식별 고정 문장 한 건을 전송하고 schema 호환성과 의미 검증 결과를 분리해 보고하며 응답 본문은 출력하지 않는다. 의미 검증 실패는 Worker가 저장을 거부하고 D04의 교정 호출 대상으로 처리한다.
 
+## DB 정합성 계약
+
+`nightlyDatabaseContract`는 JSON 필드를 PostgreSQL 컬럼, 연결 테이블, transient 값으로 분류한다. C03 이후 migration은 이 명세를 구현하며 다음 원칙을 지킨다.
+
+- 시간은 `timestamptz`, local day는 `date`, 확신도는 `numeric(5,4)`로 저장한다.
+- `sourceMessageIds`와 일기 block의 event 근거는 복합 PK와 FK를 가진 연결 테이블로 저장한다.
+- 파생 부모 삭제 시 근거 연결은 cascade하고, 원문 삭제는 영향 처리 전까지 restrict한다.
+- RLS를 켜고 `anon`/`authenticated` 권한은 회수하며 서버의 `service_role` 권한만 명시한다.
+- 배열 원소 중복, 입력 snapshot 소속, 부모당 최소 근거 수처럼 단일 CHECK로 안전하게 표현할 수 없는 규칙은 저장 전 검증과 같은 트랜잭션으로 강제한다.
+
+이 파일은 target 계약이다. C02에서는 운영 DB를 변경하지 않으며 실제 테이블과 제약 생성은 C03~C05 migration에서 수행한다.
+
 ## 후속 계약
 
 - Memory candidate

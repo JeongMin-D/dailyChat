@@ -7,6 +7,8 @@ export {
   safetySchema
 } from "./schemas.js";
 
+export { nightlyDatabaseContract } from "./database-contract.js";
+
 export {
   assertNightlyExtraction,
   validateDiary,

@@ -1,7 +1,7 @@
 ---
 tags: [mindcompanion, backlog]
 status: active
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # MVP 백로그
@@ -10,11 +10,11 @@ updated: 2026-09-24
 
 ## 현재 포커스
 
-- 현재 단계: M1 완료, M2 착수 준비
+- 현재 단계: M1 완료, M2 데이터 저장 기반 설계
 - 완료: ADR-001~006 P0 결정 승인 및 문서화
 - 완료: C01 event/mood/health/diary JSON Schema와 의미 검증
-- 다음 작업: C02 DB 제약과 애플리케이션 타입 일치
-- 후속 작업: C03 복수 원문 근거 연결 테이블 migration
+- 완료: C02 DB 제약과 애플리케이션 타입 target 계약 및 자동 대조
+- 다음 작업: C03 복수 원문 근거 연결 테이블 migration
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
@@ -44,7 +44,7 @@ updated: 2026-09-24
 ## EPIC C — 데이터 계약
 
 - [x] C01 event/mood/health/diary JSON Schema 확정 — Draft 2020-12, Ajv, Groq strict shape, 근거 의미 검증
-- [ ] C02 DB 제약과 애플리케이션 타입 일치
+- [x] C02 DB 제약과 애플리케이션 타입 일치 — 컬럼·관계·삭제·권한 target 계약과 자동 대조
 - [ ] C03 복수 원문 근거 연결 테이블 추가
 - [ ] C04 `job_runs`, `notification_outbox` 추가
 - [ ] C05 safety level/reason/checker, prompt/model version, input hash 저장
