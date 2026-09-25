@@ -6,6 +6,9 @@ const workflow = await readFile(
   new URL("../../.github/workflows/nightly.yml", import.meta.url),
   "utf8"
 );
+const packageJson = JSON.parse(
+  await readFile(new URL("../../package.json", import.meta.url), "utf8")
+);
 
 test("GitHub Actions는 매일 04:05 KST에 nightly 작업을 예약한다", () => {
   assert.match(workflow, /cron: ["']5 19 \* \* \*["']/);
@@ -36,4 +39,11 @@ test("workflow 권한과 실행 환경을 최소 범위로 고정한다", () => 
   assert.match(workflow, /node-version: 24/);
   assert.match(workflow, /SUPABASE_URL: https:\/\/ofximcgkhherplhvwkny\.supabase\.co/);
   assert.doesNotMatch(workflow, /gsk_[A-Za-z0-9_-]+|sb_secret_[A-Za-z0-9_-]+/);
+});
+
+test("nightly dry-run은 CI에서 로컬 .env 없이 실행할 수 있다", () => {
+  assert.equal(
+    packageJson.scripts["smoke:nightly:pipeline"],
+    "node --env-file-if-exists=.env scripts/check-nightly-pipeline.js"
+  );
 });
