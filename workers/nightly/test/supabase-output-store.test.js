@@ -56,6 +56,7 @@ function output() {
 
 function responseBody() {
   return {
+    action: "saved",
     jobRunId: JOB_ID,
     diaryId: DIARY_ID,
     diaryVersion: 1,
@@ -85,14 +86,115 @@ test("검증된 결과를 단일 RPC 요청으로 전송한다", async () => {
   const result = await store.save({ jobRunId: JOB_ID, output: output(), snapshot });
   assert.deepEqual(result, responseBody());
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].url, "https://project.supabase.co/rest/v1/rpc/persist_nightly_extraction");
+  assert.equal(calls[0].url, "https://project.supabase.co/rest/v1/rpc/persist_nightly_extraction_versioned");
   assert.equal(calls[0].init.headers.apikey, "sb_secret_test");
   assert.equal(calls[0].init.headers.authorization, undefined);
   assert.deepEqual(JSON.parse(calls[0].init.body), {
     p_job_run_id: JOB_ID,
-    p_result: output(),
-    p_diary_version: 1
+    p_result: output()
   });
+});
+
+test("같은 입력을 준비하는 RPC에 재현 메타데이터를 전달한다", async () => {
+  const calls = [];
+  const store = new SupabaseNightlyOutputStore({
+    url: "https://project.supabase.co",
+    serviceRoleKey: "sb_secret_test",
+    timeoutMs: 1_000,
+    async fetchImpl(url, init) {
+      calls.push({ url, init });
+      return new Response(JSON.stringify({
+        action: "noop",
+        jobRunId: JOB_ID,
+        status: "succeeded",
+        diaryId: DIARY_ID,
+        diaryVersion: 1
+      }), { status: 200 });
+    }
+  });
+
+  const result = await store.prepareRun({
+    day: "2026-09-24",
+    pipelineVersion: "nightly-pipeline-v1",
+    inputHash: "a".repeat(64),
+    provider: "groq",
+    model: "openai/gpt-oss-120b",
+    promptVersion: "nightly-v1",
+    schemaVersion: "1.0.0"
+  });
+
+  assert.equal(result.action, "noop");
+  assert.equal(calls[0].url, "https://project.supabase.co/rest/v1/rpc/prepare_nightly_job");
+  assert.deepEqual(JSON.parse(calls[0].init.body), {
+    p_day: "2026-09-24",
+    p_pipeline_version: "nightly-pipeline-v1",
+    p_input_hash: "a".repeat(64),
+    p_provider: "groq",
+    p_model: "openai/gpt-oss-120b",
+    p_prompt_version: "nightly-v1",
+    p_schema_version: "1.0.0"
+  });
+});
+
+test("prepare 입력 hash와 응답 action을 검증한다", async () => {
+  let called = false;
+  const store = new SupabaseNightlyOutputStore({
+    url: "https://project.supabase.co",
+    serviceRoleKey: "sb_secret_test",
+    timeoutMs: 1_000,
+    async fetchImpl() {
+      called = true;
+      return new Response(JSON.stringify({ action: "unknown", jobRunId: JOB_ID }), {
+        status: 200
+      });
+    }
+  });
+  const values = {
+    day: "2026-09-24",
+    pipelineVersion: "v1",
+    inputHash: "not-a-hash",
+    provider: "groq",
+    model: "model",
+    promptVersion: "prompt",
+    schemaVersion: "1.0.0"
+  };
+
+  await assert.rejects(store.prepareRun(values), /inputHash/);
+  assert.equal(called, false);
+  await assert.rejects(
+    store.prepareRun({ ...values, inputHash: "b".repeat(64) }),
+    (error) => error.code === "SUPABASE_NIGHTLY_INVALID_RESPONSE"
+  );
+});
+
+test("prepare no-op 응답은 기존 diary 식별자와 version을 요구한다", async () => {
+  const store = new SupabaseNightlyOutputStore({
+    url: "https://project.supabase.co",
+    serviceRoleKey: "sb_secret_test",
+    timeoutMs: 1_000,
+    async fetchImpl() {
+      return new Response(JSON.stringify({
+        action: "noop",
+        jobRunId: JOB_ID,
+        status: "succeeded",
+        diaryId: null,
+        diaryVersion: null
+      }), { status: 200 });
+    }
+  });
+
+  await assert.rejects(
+    store.prepareRun({
+      day: "2026-09-24",
+      pipelineVersion: "v1",
+      inputHash: "c".repeat(64),
+      provider: "groq",
+      model: "model",
+      promptVersion: "prompt",
+      schemaVersion: "1.0.0"
+    }),
+    (error) => error.code === "SUPABASE_NIGHTLY_INVALID_RESPONSE"
+  );
 });
 
 test("legacy service role key는 Bearer header를 함께 사용한다", async () => {
@@ -165,7 +267,7 @@ test("RPC 성공 응답의 식별자 형식을 검증한다", async () => {
 
   await assert.rejects(
     store.save({ jobRunId: JOB_ID, output: output(), snapshot }),
-    (error) => error.code === "SUPABASE_NIGHTLY_SAVE_INVALID_RESPONSE"
+    (error) => error.code === "SUPABASE_NIGHTLY_INVALID_RESPONSE"
   );
 });
 
@@ -181,6 +283,6 @@ test("RPC 성공 응답이 JSON이 아니면 안정적인 오류로 변환한다
 
   await assert.rejects(
     store.save({ jobRunId: JOB_ID, output: output(), snapshot }),
-    (error) => error.code === "SUPABASE_NIGHTLY_SAVE_INVALID_RESPONSE"
+    (error) => error.code === "SUPABASE_NIGHTLY_INVALID_RESPONSE"
   );
 });

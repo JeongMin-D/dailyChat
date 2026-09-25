@@ -21,7 +21,8 @@ updated: 2026-09-25
 - 완료: D01 처리 local day 선택과 D02 canonical message snapshot/hash 생성
 - 완료: D03 Groq Structured Output 호출과 D04 source/enum/range 검증
 - 완료: D05 events/health/mood 트랜잭션 저장과 D06 일기·근거 연결
-- 다음 작업: D07 동일 입력 no-op과 D08 변경 입력 새 version 생성
+- 완료: D07 동일 입력 no-op과 D08 변경 입력 새 version 생성
+- 다음 작업: D09 Telegram outbox 전송과 재시도
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
@@ -30,7 +31,7 @@ updated: 2026-09-25
 - [x] A02 저장소 디렉터리와 환경별 설정 구성
 - [x] A03 비밀정보 목록 및 `.env.example` 작성
 - [x] A04 Supabase 개발 프로젝트 `dailyChat` 생성 및 연결
-- [/] A05 기존 `schema.sql`을 순차 migration으로 변환 — foundation부터 원자적 야간 저장까지 migration 8개 적용
+- [/] A05 기존 `schema.sql`을 순차 migration으로 변환 — foundation부터 재실행·일기 version까지 migration 9개 적용
 - [x] A06 공통 오류 형식, request ID, JSON logger 구성
 - [x] A07 CI에서 lint, typecheck, unit test 실행 — Node 24, npm ci, npm run check
 - [x] A08 ADR-001~006 P0 결정 승인 — 공급자·하루 경계·기억 원장·근거·런타임·안전
@@ -65,8 +66,8 @@ updated: 2026-09-25
 - [x] D04 source ID와 enum/range 검증 — snapshot day/source/event/safety 교차 검증과 안정적 오류 코드
 - [x] D05 events/health/mood 트랜잭션 저장 — service-role 전용 단일 RPC, job 잠금·성공 전환과 rollback 검증
 - [x] D06 일기 생성과 근거 연결 — block 순서, 원문·event·safety 근거를 같은 트랜잭션에 저장
-- [ ] D07 동일 입력 재실행 멱등 처리
-- [ ] D08 변경 입력 재생성/버전 증가 처리
+- [x] D07 동일 입력 재실행 멱등 처리 — 성공 job은 LLM 전 no-op, 저장 재호출도 기존 diary 반환
+- [x] D08 변경 입력 재생성/버전 증가 처리 — 날짜별 transaction lock과 `max(version)+1`
 - [ ] D09 Telegram 전송 outbox와 재시도
 - [ ] D10 안전 플래그 알림 분기 테스트
 

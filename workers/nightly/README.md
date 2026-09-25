@@ -30,3 +30,10 @@
 - RPC는 job row를 잠그고 domain row, diary block, 원문/event 근거, 제한 safety metadata를 한 트랜잭션으로 저장합니다.
 - 성공한 경우에만 job을 `succeeded`로 바꾸며, 중간 오류는 전체 rollback됩니다.
 - 함수는 `SECURITY INVOKER`이고 `service_role`만 실행할 수 있습니다.
+
+## D07~D08 재실행과 version
+
+- `prepareRun()`은 `day + pipelineVersion + inputHash`로 기존 job을 찾거나 새 job을 만듭니다.
+- 성공한 동일 입력은 `noop`과 기존 diary ID/version을 반환하므로 추출을 다시 호출하지 않습니다.
+- 변경된 hash는 새 job을 만들고 `persist_nightly_extraction_versioned`가 날짜별 transaction lock 안에서 다음 diary version을 할당합니다.
+- 성공 job 저장 재호출은 기존 diary를 반환해 파생 데이터 중복을 막습니다.
