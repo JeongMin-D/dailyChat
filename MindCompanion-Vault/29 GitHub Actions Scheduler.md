@@ -42,7 +42,7 @@ GitHub 저장소 `Settings → Secrets and variables → Actions`에 아래 이�
 3. [x] 처리 대상 날짜를 확인한 뒤 `live` 수동 실행
 4. [x] Supabase의 job, diary, outbox 성공 상태와 Telegram 전송 확인
 5. 다음 04:05 KST 예약 실행 확인
-6. 실패 재실행에서 동일 입력 no-op과 알림 멱등성 확인
+6. [x] 실패 재실행에서 동일 입력 no-op과 알림 멱등성 확인
 
 ## 현재 상태
 
@@ -52,4 +52,6 @@ workflow, 정적 계약 테스트, Actions Secret 등록과 GitHub-hosted runner
 
 2026-09-24 live는 run `36191065811`에서 완료됐다. job succeeded, diary version 1, outbox sent와 Telegram provider message ID를 확인했다.
 
-남은 단계는 첫 04:05 KST 예약 실행과 동일 날짜 중복 재실행의 무중복 검증이다. 중복 재실행은 실제 Telegram 동작 가능성이 있어 별도 승인 후 수행한다.
+동일 날짜 재실행 run `36191616679`는 action `noop`, delivery `not_claimed`로 완료됐다. job, diary, outbox 수와 attempt, Telegram provider message ID가 증가하지 않았다.
+
+실제 live와 중복 검증 로그에서 등록한 API 키·토큰 3개와 사용자 원문 5건을 대조해 노출이 없음을 확인했다. 남은 단계는 첫 04:05 KST 예약 실행 검증뿐이다.

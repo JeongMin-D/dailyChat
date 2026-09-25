@@ -29,7 +29,9 @@ updated: 2026-09-26
 - 완료: Actions Secret 3개 등록과 GitHub-hosted runner dry-run 성공
 - 완료: 2026-09-24 메시지 5건의 diary version 1 저장과 Telegram 전송
 - 완료: Groq structured output 400의 3회 제한 재시도와 안전한 오류 metadata
-- 다음 작업: 첫 04:05 KST 예약 실행과 동일 날짜 중복 재실행 검증
+- 완료: 동일 날짜 live 재실행의 diary·outbox·Telegram 무중복 검증
+- 완료: 실제 live 로그의 비밀값·사용자 원문 비노출 감사
+- 다음 작업: 첫 04:05 KST 예약 실행 검증
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
