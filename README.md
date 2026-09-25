@@ -49,6 +49,14 @@ Groq와 Telegram 호출은 429, 5xx, 네트워크 오류 및 timeout에서만 bo
 npm run smoke:connections
 ```
 
+야간 파이프라인은 다음 명령으로 실행합니다.
+
+```bash
+npm run run:nightly
+```
+
+이 명령은 실제 Supabase에 결과를 저장하고 Telegram 메시지를 전송합니다. `NIGHTLY_TARGET_DAY`를 비우면 KST 04:00 경계 기준 마지막으로 닫힌 날짜를 처리합니다.
+
 비밀정보는 `.env.example`을 참고해 로컬 `.env`에만 둡니다. `.env`는 저장소에서 제외됩니다.
 
 ## 디렉터리

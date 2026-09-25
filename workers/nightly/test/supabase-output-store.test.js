@@ -136,6 +136,39 @@ test("같은 입력을 준비하는 RPC에 재현 메타데이터를 전달한�
   });
 });
 
+test("nightly job을 원자적으로 claim한다", async () => {
+  const calls = [];
+  const store = new SupabaseNightlyOutputStore({
+    url: "https://project.supabase.co",
+    serviceRoleKey: "sb_secret_test",
+    timeoutMs: 1_000,
+    async fetchImpl(url, init) {
+      calls.push({ url, init });
+      return new Response("true", { status: 200 });
+    }
+  });
+
+  assert.equal(await store.claimRun(JOB_ID), true);
+  assert.equal(calls[0].url, "https://project.supabase.co/rest/v1/rpc/claim_job_run");
+  assert.deepEqual(JSON.parse(calls[0].init.body), { p_job_run_id: JOB_ID });
+});
+
+test("claim 응답이 boolean이 아니면 거부한다", async () => {
+  const store = new SupabaseNightlyOutputStore({
+    url: "https://project.supabase.co",
+    serviceRoleKey: "sb_secret_test",
+    timeoutMs: 1_000,
+    async fetchImpl() {
+      return new Response(JSON.stringify({ claimed: true }), { status: 200 });
+    }
+  });
+
+  await assert.rejects(
+    store.claimRun(JOB_ID),
+    (error) => error.code === "SUPABASE_NIGHTLY_INVALID_RESPONSE"
+  );
+});
+
 test("prepare 입력 hash와 응답 action을 검증한다", async () => {
   let called = false;
   const store = new SupabaseNightlyOutputStore({

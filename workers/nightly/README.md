@@ -52,3 +52,12 @@
 - `urgent`는 `safety_guidance` outbox로 바꾸고 claim 단계에서 diary title과 block을 제거합니다.
 - urgent 메시지는 코드에 고정된 112/119·109·1577-0199 안내만 사용하며 원문·일기·reason code를 포함하지 않습니다.
 - 시스템은 사용자 대신 자동 신고하거나 제3자에게 안전 내용을 보내지 않습니다.
+
+## M2 종단 실행기
+
+- `NightlyPipelineRunner`가 target day 선택, snapshot/hash, job prepare·claim, Groq 추출, 원자 저장, outbox 등록과 Telegram 전송을 한 경로로 조합합니다.
+- 사용자 메시지가 없으면 job과 외부 API 호출 없이 `skipped`로 종료합니다.
+- 동일 성공 입력은 Groq와 저장을 건너뛰고 기존 outbox의 미완료 전송만 재개합니다.
+- 동시 실행은 DB claim 승자만 처리하고, 5분 이상 멈춘 `running` job은 같은 claim 규칙으로 이어서 실행합니다.
+- 실행 명령은 `npm run run:nightly`입니다. `NIGHTLY_TARGET_DAY`를 비우면 KST 04:00 경계 기준 마지막으로 닫힌 날짜를 선택합니다.
+- 이 명령은 실제 Supabase·Groq·Telegram을 변경하고 메시지를 보냅니다. 운영 scheduler 연결과 실제 발송 검증은 별도 승인된 운영 단계에서 수행합니다.

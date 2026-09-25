@@ -109,6 +109,22 @@ export class SupabaseNightlyOutputStore {
     return result;
   }
 
+  async claimRun(jobRunId) {
+    if (typeof jobRunId !== "string" || !UUID_PATTERN.test(jobRunId)) {
+      throw new TypeError("jobRunId must be a UUID");
+    }
+    const result = await this.requestRpc("claim_job_run", {
+      p_job_run_id: jobRunId
+    }, "SUPABASE_NIGHTLY_CLAIM_FAILED");
+    if (typeof result !== "boolean") {
+      throw codedError(
+        "SUPABASE_NIGHTLY_INVALID_RESPONSE",
+        "Supabase claim_job_run returned an invalid response"
+      );
+    }
+    return result;
+  }
+
   async save({ jobRunId, output, snapshot }) {
     if (typeof jobRunId !== "string" || !UUID_PATTERN.test(jobRunId)) {
       throw new TypeError("jobRunId must be a UUID");

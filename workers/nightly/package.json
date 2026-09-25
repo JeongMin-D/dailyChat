@@ -6,6 +6,7 @@
   "exports": {
     "./extractor": "./src/nightly-extractor.js",
     "./input": "./src/nightly-input.js",
+    "./runner": "./src/nightly-runner.js",
     "./output-store": "./src/supabase-output-store.js",
     "./notification-store": "./src/supabase-notification-store.js",
     "./notification-delivery": "./src/telegram-notification-delivery.js",

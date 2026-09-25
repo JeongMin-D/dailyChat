@@ -10,7 +10,7 @@ updated: 2026-09-25
 
 ## 현재 포커스
 
-- 현재 단계: M1 완료, M2 종단 실행 연결
+- 현재 단계: M1 완료, M2 운영 실행 준비
 - 완료: ADR-001~006 P0 결정 승인 및 문서화
 - 완료: C01 event/mood/health/diary JSON Schema와 의미 검증
 - 완료: C02 DB 제약과 애플리케이션 타입 target 계약 및 자동 대조
@@ -24,7 +24,8 @@ updated: 2026-09-25
 - 완료: D07 동일 입력 no-op과 D08 변경 입력 새 version 생성
 - 완료: D09 Telegram outbox 등록·claim·전송·재시도
 - 완료: D10 none·concern·urgent 안전 알림 분기
-- 다음 작업: M2 scheduler→추출→저장→알림 종단 실행 연결
+- 완료: M2 scheduler 진입점→추출→저장→알림 종단 실행기 연결
+- 다음 작업: 합성 dry-run과 운영 scheduler 구성·실행 검증
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
