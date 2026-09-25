@@ -6,6 +6,8 @@ import { loadSoulPrompt } from "./prompt-context.js";
 import { SupabaseMessageStore } from "./supabase-message-store.js";
 import { TelegramClient } from "./telegram.js";
 import { createJsonLogger } from "../../../packages/observability/src/json-logger.js";
+import { DashboardApp } from "../../dashboard/src/dashboard-app.js";
+import { SupabaseDashboardStore } from "../../dashboard/src/supabase-dashboard-store.js";
 
 const config = loadConfig();
 const systemPrompt = await loadSoulPrompt();
@@ -34,9 +36,17 @@ const conversation = createConversationService({
   systemPrompt,
   logger
 });
+const dashboard = new DashboardApp({
+  ...config.dashboard,
+  store: new SupabaseDashboardStore({
+    ...config.supabase,
+    timeoutMs: config.upstreamTimeoutMs
+  })
+});
 const server = createHttpServer({
   conversation,
   bodyLimitBytes: config.bodyLimitBytes,
+  dashboard,
   logger
 });
 

@@ -33,6 +33,14 @@ function choice(env, name, fallback, allowed) {
 }
 
 export function loadConfig(env = process.env) {
+  const dashboardUsername = env.DASHBOARD_USERNAME?.trim() || "";
+  const dashboardPassword = env.DASHBOARD_PASSWORD?.trim() || "";
+  if (Boolean(dashboardUsername) !== Boolean(dashboardPassword)) {
+    throw new Error("DASHBOARD_USERNAME and DASHBOARD_PASSWORD must be configured together");
+  }
+  if (dashboardPassword && dashboardPassword.length < 16) {
+    throw new Error("DASHBOARD_PASSWORD must contain at least 16 characters");
+  }
   const upstreamRetry = {
     maxAttempts: integer(env, "UPSTREAM_RETRY_MAX_ATTEMPTS", 3, { min: 1, max: 5 }),
     baseDelayMs: integer(env, "UPSTREAM_RETRY_BASE_DELAY_MS", 250, { min: 0, max: 10_000 }),
@@ -77,6 +85,10 @@ export function loadConfig(env = process.env) {
     supabase: {
       url: url(env, "SUPABASE_URL"),
       serviceRoleKey: required(env, "SUPABASE_SERVICE_ROLE_KEY")
+    },
+    dashboard: {
+      username: dashboardUsername,
+      password: dashboardPassword
     }
   });
 }

@@ -27,6 +27,35 @@ test("health endpoint를 제공한다", async () => {
   });
 });
 
+test("GET 대시보드 요청을 dashboard app에 위임한다", async () => {
+  let receivedRequestId;
+  const server = createHttpServer({
+    conversation: { handle() {} },
+    bodyLimitBytes: 1024,
+    dashboard: {
+      async handle(_request, response, requestId) {
+        receivedRequestId = requestId;
+        response.writeHead(200, { "content-type": "text/html", "x-request-id": requestId });
+        response.end("<h1>Dashboard</h1>");
+        return 200;
+      }
+    },
+    logger: { info() {}, error() {} }
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/dashboard`, {
+      headers: { "x-request-id": "dashboard-1" }
+    });
+    assert.equal(response.status, 200);
+    assert.match(await response.text(), /Dashboard/);
+    assert.equal(receivedRequestId, "dashboard-1");
+  } finally {
+    await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
 test("Telegram secret header와 JSON body를 service에 전달한다", async () => {
   let received;
   await withServer({

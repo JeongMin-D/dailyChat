@@ -43,10 +43,11 @@ function conversationError(result, requestId) {
  * @param {{
  *   conversation: {handle(input: object): Promise<{status: number, result: string}>},
  *   bodyLimitBytes: number,
+ *   dashboard?: {handle(request: import("node:http").IncomingMessage, response: import("node:http").ServerResponse, requestId: string): Promise<number | null>},
  *   logger?: Pick<import("../../../packages/observability/src/json-logger.js").JsonLogger, "info" | "error">
  * }} options
  */
-export function createHttpServer({ conversation, bodyLimitBytes, logger = console }) {
+export function createHttpServer({ conversation, bodyLimitBytes, dashboard, logger = console }) {
   return createServer(async (request, response) => {
     const requestId = requestIdFrom(request.headers["x-request-id"]);
     const startedAt = performance.now();
@@ -64,6 +65,30 @@ export function createHttpServer({ conversation, bodyLimitBytes, logger = consol
 
     if (request.method === "GET" && request.url === "/health") {
       return send(200, { status: "ok" });
+    }
+
+    if (request.method === "GET" && dashboard) {
+      try {
+        const status = await dashboard.handle(request, response, requestId);
+        if (status !== null) {
+          logger.info("http_request_completed", {
+            requestId,
+            method: request.method,
+            path,
+            status,
+            durationMs: Math.round(performance.now() - startedAt)
+          });
+          return;
+        }
+      } catch (error) {
+        logger.error("dashboard_request_failed", {
+          requestId,
+          status: 502,
+          errorCode: error?.code || "DASHBOARD_FAILED"
+        });
+        if (error?.responseSent === true) return;
+        return send(502, errorBody("DASHBOARD_FAILED", "Dashboard could not be loaded", requestId));
+      }
     }
 
     if (request.method !== "POST" || request.url !== "/telegram/webhook") {
