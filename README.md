@@ -7,7 +7,7 @@ Telegram 대화를 근거 있는 개인 기록과 일기로 만드는 단일 사
 
 ## 현재 상태
 
-M1 대화 수직 슬라이스가 완료되어 Render에 배포돼 있습니다. KST 04:00 하루 경계, Telegram webhook 인증, 허용 사용자 검사, 메시지 선저장, SOUL 프롬프트, 제한된 최근 대화 컨텍스트, Groq 응답, Telegram 전송, 외부 오류 재시도 및 DB 장애 재처리 경로가 검증됐습니다.
+Telegram 대화 수직 슬라이스, 야간 일기 파이프라인과 읽기 전용 Web Dashboard가 Render에 배포돼 있습니다. KST 04:00 하루 경계, Telegram webhook 인증, 허용 사용자 검사, 메시지 선저장, Groq 응답, 근거 기반 일기·전송, 외부 오류 재시도, 인증된 날짜별 조회·검색 경로가 검증됐습니다.
 
 ## 요구 환경
 
@@ -39,6 +39,7 @@ npm run start:bot
 
 - 상태 확인: `GET /health`
 - Telegram webhook: `POST /telegram/webhook`
+- Web Dashboard: `GET /dashboard` — `DASHBOARD_USERNAME`/`DASHBOARD_PASSWORD` HTTP Basic 인증
 - 모든 HTTP 응답: `X-Request-ID` 헤더
 - 오류 응답: `{ "error": { "code", "message", "requestId" } }`
 
@@ -102,5 +103,6 @@ MindCompanion-Vault/    Obsidian 개발 문서
 - Telegram webhook 등록 및 실대화 검증 완료
 - Groq 모델 연결 및 변경된 API key 검증 완료
 - Render `dailychat-bot` 배포 및 `/health` 검증 완료
+- 같은 Render 서비스의 `/dashboard`에 인증된 읽기 전용 대시보드 배포 완료
 
 개발 순서는 [Obsidian 일정](<MindCompanion-Vault/14 개발 우선순위 및 일정.md>)을 따릅니다.
