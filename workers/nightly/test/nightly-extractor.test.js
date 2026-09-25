@@ -188,10 +188,20 @@ test("refusal은 교정 없이 즉시 종료한다", async () => {
 
 test("HTTP 실패는 본문 없이 status와 안정적인 오류 코드만 제공한다", async () => {
   await assert.rejects(
-    extractor(async () => jsonResponse({ secret: "do not expose" }, 401))
+    extractor(async () => jsonResponse({
+      secret: "do not expose",
+      error: {
+        type: "invalid_request_error",
+        code: "json_validate_failed",
+        failed_generation: { secret: "do not expose" }
+      }
+    }, 401))
       .extract({ snapshot: snapshot() }),
     (error) => error.code === "GROQ_EXTRACTION_REQUEST_FAILED"
       && error.status === 401
+      && error.providerErrorType === "invalid_request_error"
+      && error.providerErrorCode === "json_validate_failed"
+      && error.hasFailedGeneration === true
       && !error.message.includes("do not expose")
   );
 });

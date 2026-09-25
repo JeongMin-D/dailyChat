@@ -93,10 +93,21 @@ export class GroqNightlyExtractor {
     });
 
     if (!response.ok) {
+      const providerPayload = await response.json().catch(() => null);
+      const providerError = providerPayload?.error;
       throw codedError(
         "GROQ_EXTRACTION_REQUEST_FAILED",
         `Groq nightly extraction failed with status ${response.status}`,
-        { status: response.status }
+        {
+          status: response.status,
+          providerErrorType: typeof providerError?.type === "string"
+            ? providerError.type
+            : null,
+          providerErrorCode: typeof providerError?.code === "string"
+            ? providerError.code
+            : null,
+          hasFailedGeneration: providerError?.failed_generation != null
+        }
       );
     }
     return response.json();
