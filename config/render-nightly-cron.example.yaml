@@ -1,0 +1,54 @@
+# Inactive Blueprint example. Copy this service into the root render.yaml only
+# after approving Render Cron billing (minimum monthly charge applies).
+services:
+  - type: cron
+    name: dailychat-nightly
+    runtime: node
+    plan: 0.5c-512mb
+    region: singapore
+    schedule: "5 19 * * *" # 19:05 UTC = 04:05 KST on the following calendar day
+    buildCommand: npm ci
+    startCommand: npm run run:nightly
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: APP_TIMEZONE
+        value: Asia/Seoul
+      - key: DAY_BOUNDARY_HOUR
+        value: "4"
+      - key: NIGHTLY_PIPELINE_VERSION
+        value: nightly-pipeline-v1
+      - key: UPSTREAM_TIMEOUT_MS
+        value: "60000"
+      - key: UPSTREAM_RETRY_MAX_ATTEMPTS
+        value: "3"
+      - key: UPSTREAM_RETRY_BASE_DELAY_MS
+        value: "250"
+      - key: UPSTREAM_RETRY_MAX_DELAY_MS
+        value: "2000"
+      - key: GROQ_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: GROQ_CHAT_MODEL
+        value: openai/gpt-oss-120b
+      - key: GROQ_EXTRACTION_MODEL
+        value: openai/gpt-oss-120b
+      - key: SUPABASE_URL
+        value: https://ofximcgkhherplhvwkny.supabase.co
+      - key: TELEGRAM_BOT_TOKEN
+        fromService:
+          name: dailychat-bot
+          type: web
+          envVarKey: TELEGRAM_BOT_TOKEN
+      - key: GROQ_API_KEY
+        fromService:
+          name: dailychat-bot
+          type: web
+          envVarKey: GROQ_API_KEY
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        fromService:
+          name: dailychat-bot
+          type: web
+          envVarKey: SUPABASE_SERVICE_ROLE_KEY

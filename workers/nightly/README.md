@@ -61,3 +61,4 @@
 - 동시 실행은 DB claim 승자만 처리하고, 5분 이상 멈춘 `running` job은 같은 claim 규칙으로 이어서 실행합니다.
 - 실행 명령은 `npm run run:nightly`입니다. `NIGHTLY_TARGET_DAY`를 비우면 KST 04:00 경계 기준 마지막으로 닫힌 날짜를 선택합니다.
 - 이 명령은 실제 Supabase·Groq·Telegram을 변경하고 메시지를 보냅니다. 운영 scheduler 연결과 실제 발송 검증은 별도 승인된 운영 단계에서 수행합니다.
+- `npm run smoke:nightly:pipeline`은 합성 입력과 실제 Groq를 사용하되 Supabase·Telegram adapter는 메모리 대역으로 바꿔 저장·발송 없이 전체 순서를 검증합니다.

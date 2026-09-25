@@ -49,6 +49,12 @@ Groq와 Telegram 호출은 429, 5xx, 네트워크 오류 및 timeout에서만 bo
 npm run smoke:connections
 ```
 
+합성 메시지와 실제 Groq를 사용하되 Supabase·Telegram은 메모리 대역으로 바꿔 종단 경로를 검증합니다.
+
+```bash
+npm run smoke:nightly:pipeline
+```
+
 야간 파이프라인은 다음 명령으로 실행합니다.
 
 ```bash
