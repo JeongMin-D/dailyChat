@@ -1,10 +1,14 @@
 # Configuration
 
-## Render nightly Cron
+## Nightly scheduler
+
+운영 scheduler는 `.github/workflows/nightly.yml`의 GitHub Actions를 사용합니다. 매일 `19:05 UTC` (`04:05 Asia/Seoul`)에 실행하며, 저장소 Actions Secret으로 `GROQ_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `TELEGRAM_BOT_TOKEN`이 필요합니다.
+
+## Render nightly Cron (inactive alternative)
 
 `render-nightly-cron.example.yaml`은 아직 활성화되지 않은 검토용 Blueprint입니다. `04:05 Asia/Seoul`은 Render의 UTC cron에서 `5 19 * * *`이며, Cron은 `dailychat-bot`의 Telegram·Groq·Supabase 비밀 환경변수를 `fromService.envVarKey`로 참조합니다.
 
-Render Cron은 유료 리소스이므로 비용 승인 전에는 루트 `render.yaml`에 합치거나 서비스를 생성하지 않습니다. 승인 후 예시의 service 항목을 루트 Blueprint에 추가하고 첫 수동 실행 및 다음 예약 실행을 검증합니다.
+Render Cron은 유료 리소스이므로 루트 `render.yaml`에 합치거나 서비스를 생성하지 않습니다. GitHub Actions를 사용할 수 없는 경우에만 대안으로 재검토합니다.
 
 환경변수의 기준은 루트 `.env.example`입니다.
 

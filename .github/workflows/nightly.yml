@@ -1,0 +1,79 @@
+name: Nightly diary
+
+on:
+  schedule:
+    - cron: "5 19 * * *" # 19:05 UTC = 04:05 KST on the following calendar day
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Execution mode
+        required: true
+        default: dry-run
+        type: choice
+        options:
+          - dry-run
+          - live
+      target_day:
+        description: Optional YYYY-MM-DD target for a manual live replay
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-diary
+  cancel-in-progress: false
+
+jobs:
+  nightly:
+    name: Generate and deliver nightly diary
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify pipeline without external writes
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'dry-run'
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_BASE_URL: https://api.groq.com/openai/v1
+          GROQ_CHAT_MODEL: openai/gpt-oss-120b
+          GROQ_EXTRACTION_MODEL: openai/gpt-oss-120b
+          UPSTREAM_TIMEOUT_MS: "60000"
+          UPSTREAM_RETRY_MAX_ATTEMPTS: "3"
+          UPSTREAM_RETRY_BASE_DELAY_MS: "250"
+          UPSTREAM_RETRY_MAX_DELAY_MS: "2000"
+        run: npm run smoke:nightly:pipeline
+
+      - name: Generate and deliver diary
+        if: github.event_name == 'schedule' || inputs.mode == 'live'
+        env:
+          APP_TIMEZONE: Asia/Seoul
+          DAY_BOUNDARY_HOUR: "4"
+          NIGHTLY_PIPELINE_VERSION: nightly-pipeline-v1
+          NIGHTLY_TARGET_DAY: ${{ inputs.target_day }}
+          LOG_LEVEL: info
+          UPSTREAM_TIMEOUT_MS: "60000"
+          UPSTREAM_RETRY_MAX_ATTEMPTS: "3"
+          UPSTREAM_RETRY_BASE_DELAY_MS: "250"
+          UPSTREAM_RETRY_MAX_DELAY_MS: "2000"
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_BASE_URL: https://api.groq.com/openai/v1
+          GROQ_CHAT_MODEL: openai/gpt-oss-120b
+          GROQ_EXTRACTION_MODEL: openai/gpt-oss-120b
+          SUPABASE_URL: https://ofximcgkhherplhvwkny.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: npm run run:nightly

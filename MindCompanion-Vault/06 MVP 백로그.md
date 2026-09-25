@@ -10,7 +10,7 @@ updated: 2026-09-25
 
 ## 현재 포커스
 
-- 현재 단계: M1 완료, M2 운영 scheduler 승인 대기
+- 현재 단계: M1 완료, M2 GitHub Actions scheduler 운영 검증
 - 완료: ADR-001~006 P0 결정 승인 및 문서화
 - 완료: C01 event/mood/health/diary JSON Schema와 의미 검증
 - 완료: C02 DB 제약과 애플리케이션 타입 target 계약 및 자동 대조
@@ -25,8 +25,8 @@ updated: 2026-09-25
 - 완료: D09 Telegram outbox 등록·claim·전송·재시도
 - 완료: D10 none·concern·urgent 안전 알림 분기
 - 완료: M2 scheduler 진입점→추출→저장→알림 종단 실행기 연결
-- 완료: 실제 Groq + 합성 adapter 종단 dry-run, Render Cron Blueprint 예시와 검증
-- 다음 작업: 유료 Render Cron 승인 후 04:05 KST scheduler 생성·첫 실행 검증
+- 완료: 실제 Groq + 합성 adapter 종단 dry-run, GitHub Actions 04:05 KST scheduler 구성
+- 다음 작업: Actions Secret 3개 등록 후 수동 live 실행과 첫 예약 실행 검증
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반

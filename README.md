@@ -1,6 +1,7 @@
 # MindCompanion
 
 [![CI](https://github.com/JeongMin-D/dailyChat/actions/workflows/ci.yml/badge.svg)](https://github.com/JeongMin-D/dailyChat/actions/workflows/ci.yml)
+[![Nightly diary](https://github.com/JeongMin-D/dailyChat/actions/workflows/nightly.yml/badge.svg)](https://github.com/JeongMin-D/dailyChat/actions/workflows/nightly.yml)
 
 Telegram 대화를 근거 있는 개인 기록과 일기로 만드는 단일 사용자용 AI 라이프 로깅 서비스입니다.
 
@@ -62,6 +63,8 @@ npm run run:nightly
 ```
 
 이 명령은 실제 Supabase에 결과를 저장하고 Telegram 메시지를 전송합니다. `NIGHTLY_TARGET_DAY`를 비우면 KST 04:00 경계 기준 마지막으로 닫힌 날짜를 처리합니다.
+
+운영 scheduler는 GitHub Actions가 매일 `04:05 KST`에 실행합니다. Actions 저장소 Secret에 `GROQ_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `TELEGRAM_BOT_TOKEN`을 등록해야 합니다. 수동 실행의 기본 모드는 외부 저장·발송이 없는 `dry-run`이며, 실제 실행은 `live`를 선택합니다.
 
 비밀정보는 `.env.example`을 참고해 로컬 `.env`에만 둡니다. `.env`는 저장소에서 제외됩니다.
 

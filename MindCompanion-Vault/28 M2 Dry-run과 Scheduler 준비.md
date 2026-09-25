@@ -3,7 +3,7 @@ aliases:
   - DailyChat nightly dry run
   - DailyChat Render Cron 준비
 tags: [mindcompanion, nightly, render, scheduler, m2]
-status: awaiting-approval
+status: superseded
 updated: 2026-09-25
 ---
 
@@ -49,6 +49,10 @@ Render Cron 표현식은 UTC 기준이다. 목표 시각 `04:05 Asia/Seoul`은 �
 
 Render Cron은 실행 시간 기준 과금과 별개로 서비스당 월 최소 $1 비용이 발생한다. 비용 승인이 필요한 외부 리소스이므로 실제 Cron 생성, 루트 Blueprint 활성화, 첫 실제 Telegram 발송은 수행하지 않았다.
 
+## 결정
+
+비용 없는 대안으로 [[29 GitHub Actions Scheduler]]를 채택했다. Render Cron 예시는 비활성 참고 자료로 유지하며 실제 scheduler로 사용하지 않는다.
+
 ## 다음 작업
 
-비용 승인 후 Blueprint를 활성화하고 Cron을 생성한다. 첫 수동 실행에서 Render 로그, Supabase job/diary/outbox, Telegram 수신을 확인한 뒤 다음 04:05 KST 예약 실행을 관찰한다.
+GitHub Actions Secret 3개를 등록한 뒤 수동 live 실행에서 Supabase job/diary/outbox와 Telegram 수신을 확인하고 다음 04:05 KST 예약 실행을 관찰한다.
