@@ -92,7 +92,14 @@ try {
 } catch (error) {
   logger.error("nightly_run_failed", {
     errorCode: error?.code || "NIGHTLY_RUN_FAILED",
-    status: Number.isInteger(error?.status) ? error.status : undefined
+    status: Number.isInteger(error?.status) ? error.status : undefined,
+    providerErrorType: typeof error?.providerErrorType === "string"
+      ? error.providerErrorType
+      : undefined,
+    providerErrorCode: typeof error?.providerErrorCode === "string"
+      ? error.providerErrorCode
+      : undefined,
+    hasFailedGeneration: error?.hasFailedGeneration === true || undefined
   });
   process.exitCode = 1;
 }

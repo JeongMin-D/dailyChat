@@ -205,3 +205,31 @@ test("HTTP 실패는 본문 없이 status와 안정적인 오류 코드만 제�
       && !error.message.includes("do not expose")
   );
 });
+
+test("Groq structured output 400은 같은 요청으로 최대 세 번 재시도한다", async () => {
+  let count = 0;
+  const logs = [];
+  const result = await extractor(async () => {
+    count += 1;
+    if (count < 3) {
+      return jsonResponse({
+        error: {
+          type: "invalid_request_error",
+          code: "json_validate_failed",
+          failed_generation: { sensitive: "must not be logged" }
+        }
+      }, 400);
+    }
+    return jsonResponse(groqResponse(validOutput()));
+  }, {
+    warn(event, fields) {
+      logs.push({ event, fields });
+    }
+  }).extract({ snapshot: snapshot() });
+
+  assert.equal(result.status, "completed");
+  assert.equal(count, 3);
+  assert.equal(logs.length, 2);
+  assert(logs.every(({ event }) => event === "nightly_extraction_provider_retry"));
+  assert.doesNotMatch(JSON.stringify(logs), /must not be logged/);
+});

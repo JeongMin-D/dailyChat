@@ -41,6 +41,13 @@ function safeUsage(usage) {
   return Object.keys(result).length > 0 ? result : null;
 }
 
+function shouldRetryStructuredOutputError(status, providerError) {
+  if (status !== 400 || !providerError || typeof providerError !== "object") return false;
+  return providerError.type === "invalid_request_error"
+    || typeof providerError.code === "string"
+    || providerError.failed_generation != null;
+}
+
 export class GroqNightlyExtractor {
   constructor({
     apiKey,
@@ -64,53 +71,69 @@ export class GroqNightlyExtractor {
   }
 
   async request(messages) {
-    const response = await fetchWithRetry(`${this.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${this.apiKey}`,
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages,
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "nightly_extraction",
-            strict: true,
-            schema: nightlyExtractionSchema
+    for (let providerAttempt = 1; providerAttempt <= 3; providerAttempt += 1) {
+      const response = await fetchWithRetry(`${this.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${this.apiKey}`,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages,
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "nightly_extraction",
+              strict: true,
+              schema: nightlyExtractionSchema
+            }
           }
-        }
-      })
-    }, {
-      timeoutMs: this.timeoutMs,
-      ...this.retry,
-      fetchImpl: this.fetch,
-      onRetry: (details) => this.logger?.warn("upstream_retry_scheduled", {
-        upstream: "groq",
-        ...details
-      })
-    });
+        })
+      }, {
+        timeoutMs: this.timeoutMs,
+        ...this.retry,
+        fetchImpl: this.fetch,
+        onRetry: (details) => this.logger?.warn("upstream_retry_scheduled", {
+          upstream: "groq",
+          ...details
+        })
+      });
 
-    if (!response.ok) {
+      if (response.ok) return response.json();
+
       const providerPayload = await response.json().catch(() => null);
       const providerError = providerPayload?.error;
+      const errorFields = {
+        status: response.status,
+        providerErrorType: typeof providerError?.type === "string"
+          ? providerError.type
+          : null,
+        providerErrorCode: typeof providerError?.code === "string"
+          ? providerError.code
+          : null,
+        hasFailedGeneration: providerError?.failed_generation != null
+      };
+      if (providerAttempt < 3
+        && shouldRetryStructuredOutputError(response.status, providerError)) {
+        this.logger?.warn("nightly_extraction_provider_retry", {
+          attempt: providerAttempt,
+          ...errorFields
+        });
+        continue;
+      }
+
       throw codedError(
         "GROQ_EXTRACTION_REQUEST_FAILED",
         `Groq nightly extraction failed with status ${response.status}`,
-        {
-          status: response.status,
-          providerErrorType: typeof providerError?.type === "string"
-            ? providerError.type
-            : null,
-          providerErrorCode: typeof providerError?.code === "string"
-            ? providerError.code
-            : null,
-          hasFailedGeneration: providerError?.failed_generation != null
-        }
+        errorFields
       );
     }
-    return response.json();
+
+    throw codedError(
+      "GROQ_EXTRACTION_REQUEST_FAILED",
+      "Groq nightly extraction retry loop ended unexpectedly"
+    );
   }
 
   async extract({ snapshot, diaryTone = "warm", memorySummary = "", recentTitles = [] }) {
