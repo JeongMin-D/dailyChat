@@ -2,7 +2,7 @@
 aliases:
   - DailyChat GitHub Actions Scheduler
 tags: [mindcompanion, nightly, github-actions, scheduler, m2]
-status: verifying
+status: active
 updated: 2026-09-25
 ---
 
@@ -37,8 +37,8 @@ GitHub 저장소 `Settings → Secrets and variables → Actions`에 아래 이�
 
 ## 검증 순서
 
-1. Actions Secret 3개 등록
-2. `Nightly diary`를 `dry-run`으로 수동 실행하고 Groq 구조화 출력 성공 확인
+1. [x] Actions Secret 3개 등록
+2. [x] `Nightly diary`를 `dry-run`으로 수동 실행하고 Groq 구조화 출력 성공 확인
 3. 처리 대상 날짜를 확인한 뒤 `live` 수동 실행
 4. Supabase의 job, diary, outbox 성공 상태와 Telegram 수신 확인
 5. 다음 04:05 KST 예약 실행 확인
@@ -46,4 +46,8 @@ GitHub 저장소 `Settings → Secrets and variables → Actions`에 아래 이�
 
 ## 현재 상태
 
-workflow와 정적 계약 테스트는 완료했다. GitHub 저장소에 Secret이 아직 없으므로 외부 연결을 포함한 첫 Actions 실행은 대기 중이다.
+workflow, 정적 계약 테스트, Actions Secret 등록과 GitHub-hosted runner dry-run을 완료했다. run `36142874248`에서 Groq 구조화 출력과 `externalWrites=false` 실행이 성공했다.
+
+첫 실행은 `.env` 파일 부재 때문에 실패해 smoke 명령을 `--env-file-if-exists=.env`로 수정했다. 이후 Groq가 strict Structured Output 400을 두 번 반환했으나 같은 입력의 재실행에서 성공했다. Groq 공식 문서도 400 발생 시 재현 제보를 안내하므로, 예약 실행에서 같은 오류가 반복되면 제한된 400 재시도 정책을 추가 검토한다.
+
+남은 단계는 처리 대상 날짜를 확인한 수동 live 실행과 첫 04:05 KST 예약 실행 검증이다.
