@@ -55,3 +55,5 @@ workflow, 정적 계약 테스트, Actions Secret 등록과 GitHub-hosted runner
 동일 날짜 재실행 run `36191616679`는 action `noop`, delivery `not_claimed`로 완료됐다. job, diary, outbox 수와 attempt, Telegram provider message ID가 증가하지 않았다.
 
 실제 live와 중복 검증 로그에서 등록한 API 키·토큰 3개와 사용자 원문 5건을 대조해 노출이 없음을 확인했다. 남은 단계는 첫 04:05 KST 예약 실행 검증뿐이다.
+
+사용자 요청으로 2026-09-26 06:37 KST에 즉시 live run `36192530118`도 실행했다. 파이프라인은 2026-09-25 처리일을 선택했고, Supabase 대조에서 user message·nightly job·diary·outbox가 모두 0건임을 확인해 `no_user_messages`로 skip했다. 새 Groq 호출, DB 쓰기, Telegram 전송은 발생하지 않았다. 이 검증은 수동 live 경로의 빈 입력 안전성을 보강하며, 첫 예약 실행 자체의 확인은 대체하지 않는다.

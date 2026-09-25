@@ -10,7 +10,7 @@ updated: 2026-09-26
 
 ## 현재 포커스
 
-- 현재 단계: M1 완료, M2 GitHub Actions 첫 live 완료·예약 실행 대기
+- 현재 단계: M1 완료, M2 GitHub Actions 첫 live·즉시 skip 검증 완료·예약 실행 대기
 - 완료: ADR-001~006 P0 결정 승인 및 문서화
 - 완료: C01 event/mood/health/diary JSON Schema와 의미 검증
 - 완료: C02 DB 제약과 애플리케이션 타입 target 계약 및 자동 대조
@@ -31,6 +31,7 @@ updated: 2026-09-26
 - 완료: Groq structured output 400의 3회 제한 재시도와 안전한 오류 metadata
 - 완료: 동일 날짜 live 재실행의 diary·outbox·Telegram 무중복 검증
 - 완료: 실제 live 로그의 비밀값·사용자 원문 비노출 감사
+- 완료: 빈 처리일 즉시 live 실행의 no-op/skip 및 외부 전송 미발생 검증
 - 다음 작업: 첫 04:05 KST 예약 실행 검증
 - 전체 상태: [[15 현재 진행 현황]]
 
