@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./input": "./src/nightly-input.js"
+    "./extractor": "./src/nightly-extractor.js",
+    "./input": "./src/nightly-input.js",
+    "./prompt": "./src/nightly-prompt.js",
+    "./store": "./src/supabase-input-store.js"
   }
 }

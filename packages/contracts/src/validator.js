@@ -54,10 +54,18 @@ function addDuplicateErrors(errors, instancePath, values) {
   }
 }
 
-function semanticErrors(value, allowedMessageIds) {
+function semanticErrors(value, allowedMessageIds, expectedDay) {
   const errors = [];
   const eventRefs = value.events.map((event) => event.eventRef);
   const knownEventRefs = new Set(eventRefs);
+
+  if (expectedDay && value.day !== expectedDay) {
+    errors.push(semanticError(
+      "/day",
+      "day must match the input snapshot",
+      { expectedDay }
+    ));
+  }
 
   for (const eventRef of duplicateValues(eventRefs)) {
     errors.push(semanticError("/events", "eventRef must be unique", { eventRef }));
@@ -157,16 +165,16 @@ export function validateNightlyExtractionShape(value) {
 
 /**
  * @param {unknown} value
- * @param {{ allowedMessageIds?: string[] }} [options]
+ * @param {{ allowedMessageIds?: string[], expectedDay?: string }} [options]
  */
 export function validateNightlyExtraction(value, options = {}) {
-  const { allowedMessageIds } = options;
+  const { allowedMessageIds, expectedDay } = options;
   const shape = validateNightlyExtractionShape(value);
   if (!shape.valid) {
     return shape;
   }
 
-  const errors = semanticErrors(value, allowedMessageIds);
+  const errors = semanticErrors(value, allowedMessageIds, expectedDay);
   return { valid: errors.length === 0, errors };
 }
 

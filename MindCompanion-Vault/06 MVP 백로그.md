@@ -19,7 +19,8 @@ updated: 2026-09-25
 - 완료: C05 제한 safety 원장과 provider/model/prompt/schema/input 재현 metadata
 - 완료: C06 UTC 저장과 KST 04:00 DB 무결성 검증
 - 완료: D01 처리 local day 선택과 D02 canonical message snapshot/hash 생성
-- 다음 작업: D03 Groq Structured Output 호출과 D04 source/enum/range 검증
+- 완료: D03 Groq Structured Output 호출과 D04 source/enum/range 검증
+- 다음 작업: D05 events/health/mood 트랜잭션 저장과 D06 일기·근거 연결
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
@@ -59,8 +60,8 @@ updated: 2026-09-25
 
 - [x] D01 처리할 local day 선택 — 마지막으로 완전히 닫힌 날짜를 scheduler가 job day로 명시
 - [x] D02 메시지 snapshot과 hash 생성 — user-only, sentAt/id 정렬, UTF-8 JSON, SHA-256
-- [ ] D03 Structured Output LLM 호출
-- [ ] D04 source ID와 enum/range 검증
+- [x] D03 Structured Output LLM 호출 — strict JSON Schema, prompt injection 경계, 빈 입력 skip, 1회 교정
+- [x] D04 source ID와 enum/range 검증 — snapshot day/source/event/safety 교차 검증과 안정적 오류 코드
 - [ ] D05 events/health/mood 트랜잭션 저장
 - [ ] D06 일기 생성과 근거 연결
 - [ ] D07 동일 입력 재실행 멱등 처리

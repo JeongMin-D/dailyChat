@@ -186,6 +186,16 @@ test("입력 snapshot 밖의 source message ID를 거부한다", () => {
   assert.ok(result.errors.some((error) => error.params.sourceMessageId === MESSAGE_2));
 });
 
+test("출력 day가 명시된 snapshot day와 다르면 거부한다", () => {
+  const result = validateNightlyExtraction(validResult(), {
+    allowedMessageIds: [MESSAGE_1, MESSAGE_2],
+    expectedDay: "2026-09-25"
+  });
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.instancePath === "/day"));
+});
+
 test("assert API는 안정적인 오류 코드와 검증 상세를 제공한다", () => {
   const value = validResult();
   value.schemaVersion = "2.0.0";

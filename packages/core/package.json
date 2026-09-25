@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./http": "./src/http/fetch-with-retry.js",
     "./time": "./src/time/local-day.js"
   }
 }

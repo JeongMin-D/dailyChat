@@ -12,6 +12,8 @@
     "setup:supabase": "node scripts/init-supabase-settings.js",
     "smoke:connections": "node scripts/check-external-services.js",
     "smoke:contract": "node scripts/check-groq-contract.js",
+    "smoke:nightly": "node --env-file=.env scripts/check-nightly-extraction.js",
+    "smoke:nightly:live-data": "node --env-file=.env scripts/check-nightly-extraction.js --live-data",
     "start:bot": "npm --workspace @mindcompanion/bot start",
     "lint": "eslint .",
     "typecheck": "tsc --project tsconfig.json",

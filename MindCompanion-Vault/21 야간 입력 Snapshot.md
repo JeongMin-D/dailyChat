@@ -57,9 +57,11 @@ Snapshot 본문은 Worker 실행 중 D03 LLM 입력과 D04 source ID 검증에�
 
 ## 검증 결과
 
-- 자동 테스트 104개 통과
+- 자동 테스트 115개 통과
 - 입력 배열 순서와 동등 timestamp 표기가 달라도 같은 hash
 - day, content, source ID 변경 시 다른 hash
 - 잘못된 날짜·UUID·timestamp·중복 source 거부
 - 실제 Supabase의 2026-09-24 user 메시지 5건과 DB count 일치
 - 같은 실제 입력을 연속 조회했을 때 snapshot과 hash가 동일
+
+다음 단계인 D03~D04는 [[22 구조화 추출과 근거 검증]]에서 구현했다.
