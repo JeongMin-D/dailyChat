@@ -3,6 +3,8 @@ import test from "node:test";
 
 import {
   formatDiaryNotification,
+  formatSafetyGuidanceNotification,
+  SAFETY_GUIDANCE_TEXT,
   TelegramNotificationDelivery
 } from "../src/telegram-notification-delivery.js";
 
@@ -11,6 +13,8 @@ const NOTIFICATION_ID = "99999999-9999-4999-8999-999999999999";
 function payload(attempt = 1) {
   return {
     notificationId: NOTIFICATION_ID,
+    notificationType: "daily_diary",
+    safetyLevel: "none",
     recipientChatId: "200",
     attempt,
     day: "2026-09-24",
@@ -48,6 +52,71 @@ test("claim한 일기를 일반 텍스트로 보내고 provider message ID를 �
     }],
     ["sent", { notificationId: NOTIFICATION_ID, providerMessageId: "321" }]
   ]);
+});
+
+test("concern 일기는 고정 지지 문구와 함께 보내되 본문 흐름을 유지한다", () => {
+  const text = formatDiaryNotification({ ...payload(), safetyLevel: "concern" });
+  assert.match(text, /^오늘은 마음이 많이 힘들었을 수 있어요\./);
+  assert.match(text, /📖 2026-09-24 일기/);
+  assert.match(text, /첫 문단/);
+});
+
+test("urgent는 일기 내용을 무시하고 검증된 고정 안전 안내만 만든다", () => {
+  const urgent = {
+    ...payload(),
+    notificationType: "safety_guidance",
+    safetyLevel: "urgent",
+    title: "전송하면 안 되는 제목",
+    blocks: [{ position: 0, text: "전송하면 안 되는 일기 본문" }]
+  };
+  const text = formatSafetyGuidanceNotification(urgent);
+  assert.equal(text, SAFETY_GUIDANCE_TEXT);
+  assert.match(text, /지금 안전한가요/);
+  assert.match(text, /112 또는 119/);
+  assert.match(text, /자살예방 상담전화 109/);
+  assert.match(text, /정신건강 위기상담전화 1577-0199/);
+  assert.match(text, /자동 신고가 아니며/);
+  assert.doesNotMatch(text, /전송하면 안 되는/);
+});
+
+test("urgent delivery는 Telegram에 안전 안내만 보내고 완료 처리한다", async () => {
+  let sentText;
+  const store = {
+    claim: async () => ({
+      ...payload(),
+      notificationType: "safety_guidance",
+      safetyLevel: "urgent",
+      title: null,
+      blocks: []
+    }),
+    markSent: async () => {},
+    markFailed: async () => {}
+  };
+  const telegramClient = {
+    sendText: async (_chatId, text) => {
+      sentText = text;
+      return { messageId: "654" };
+    }
+  };
+  const result = await new TelegramNotificationDelivery({ store, telegramClient })
+    .deliver(NOTIFICATION_ID);
+  assert.equal(result.action, "sent");
+  assert.equal(sentText, SAFETY_GUIDANCE_TEXT);
+});
+
+test("safety level과 notification type이 어긋나면 formatter가 거부한다", () => {
+  assert.throws(
+    () => formatDiaryNotification({ ...payload(), safetyLevel: "urgent" }),
+    /complete diary payload/
+  );
+  assert.throws(
+    () => formatSafetyGuidanceNotification({
+      ...payload(),
+      notificationType: "safety_guidance",
+      safetyLevel: "concern"
+    }),
+    /urgent safety guidance/
+  );
 });
 
 test("claim 실패는 Telegram을 호출하지 않는다", async () => {

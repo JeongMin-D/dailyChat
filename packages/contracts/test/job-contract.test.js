@@ -32,7 +32,7 @@ test("outbox는 본문 대신 참조와 고유 멱등 키만 저장한다", () =
   assert.deepEqual(notificationOutboxContract.requiredReferences, ["job_run_id", "diary_id"]);
   assert.equal(notificationOutboxContract.idempotency.unique, true);
   assert.deepEqual(notificationOutboxContract.channels, ["telegram"]);
-  assert.deepEqual(notificationOutboxContract.types, ["daily_diary"]);
+  assert.deepEqual(notificationOutboxContract.types, ["daily_diary", "safety_guidance"]);
 });
 
 test("claim 계약은 재시도 가능 상태와 stale 회수 시간을 고정한다", () => {
@@ -43,5 +43,12 @@ test("claim 계약은 재시도 가능 상태와 stale 회수 시간을 고정�
     maxAttempts: 5,
     maxRetryAfterSeconds: 86_400,
     telegramMaxTextLength: 4_096
+  });
+  assert.deepEqual(notificationOutboxContract.safetyRouting, {
+    none: "daily_diary",
+    concern: "daily_diary",
+    urgent: "safety_guidance",
+    urgentPayloadPolicy: "fixed-guidance-only",
+    automaticReporting: false
   });
 });

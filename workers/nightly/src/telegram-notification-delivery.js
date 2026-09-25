@@ -20,7 +20,9 @@ export function formatDiaryNotification(payload, maxLength = MAX_TELEGRAM_TEXT_L
     throw new RangeError("maxLength must be between 32 and 4096");
   }
   if (
-    typeof payload?.day !== "string"
+    payload?.notificationType !== "daily_diary"
+    || !new Set(["none", "concern"]).has(payload?.safetyLevel)
+    || typeof payload?.day !== "string"
     || typeof payload?.title !== "string"
     || !Number.isInteger(payload?.version)
     || !Array.isArray(payload?.blocks)
@@ -29,9 +31,12 @@ export function formatDiaryNotification(payload, maxLength = MAX_TELEGRAM_TEXT_L
     throw new TypeError("A complete diary payload is required");
   }
 
+  const concernPrefix = payload.safetyLevel === "concern"
+    ? "오늘은 마음이 많이 힘들었을 수 있어요. 아래 기록은 대화에서 확인된 내용만 담았어요.\n\n"
+    : "";
   const header = `📖 ${payload.day} 일기\n${payload.title}`;
   const body = payload.blocks.map(({ text }) => text).join("\n\n");
-  const fullText = `${header}\n\n${body}\n\n(v${payload.version})`;
+  const fullText = `${concernPrefix}${header}\n\n${body}\n\n(v${payload.version})`;
   if (fullText.length <= maxLength) return fullText;
 
   const suffix = "\n\n…(일부 생략)";
@@ -39,6 +44,36 @@ export function formatDiaryNotification(payload, maxLength = MAX_TELEGRAM_TEXT_L
     fullText,
     maxLength - suffix.length
   )}${suffix}`;
+}
+
+export const SAFETY_GUIDANCE_TEXT = `지금 안전한가요?
+
+지금 당장 자신이나 다른 사람을 해칠 위험이 있다면 혼자 있지 말고 가까운 사람에게 알린 뒤 112 또는 119에 연락해 주세요.
+
+24시간 도움:
+- 자살예방 상담전화 109
+- 정신건강 위기상담전화 1577-0199
+
+가능하다면 답장으로 지금 안전한지 알려주세요. 이 안내는 진단이나 자동 신고가 아니며, 일반 일기는 자동 발송하지 않았어요.`;
+
+export function formatSafetyGuidanceNotification(payload) {
+  if (
+    payload?.notificationType !== "safety_guidance"
+    || payload?.safetyLevel !== "urgent"
+  ) {
+    throw new TypeError("An urgent safety guidance payload is required");
+  }
+  return SAFETY_GUIDANCE_TEXT;
+}
+
+export function formatTelegramNotification(payload) {
+  if (payload?.notificationType === "daily_diary") {
+    return formatDiaryNotification(payload);
+  }
+  if (payload?.notificationType === "safety_guidance") {
+    return formatSafetyGuidanceNotification(payload);
+  }
+  throw new TypeError("Unsupported notification type");
 }
 
 function classifyTelegramFailure(error) {
@@ -104,7 +139,7 @@ export class TelegramNotificationDelivery {
     try {
       ({ messageId } = await this.telegramClient.sendText(
         payload.recipientChatId,
-        formatDiaryNotification(payload)
+        formatTelegramNotification(payload)
       ));
     } catch (error) {
       const failure = classifyTelegramFailure(error);

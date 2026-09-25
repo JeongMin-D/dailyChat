@@ -47,12 +47,18 @@ test("DB enum은 공유 job contract와 일치한다", async () => {
   const foundation = (
     await readFile(new URL("../../database/migrations/0001_foundation.sql", import.meta.url), "utf8")
   ).toLowerCase();
+  const safetyRouting = (
+    await readFile(
+      new URL("../../database/migrations/0011_safety_notification_routing.sql", import.meta.url),
+      "utf8"
+    )
+  ).toLowerCase();
 
   assert.match(foundation, new RegExp(`status in \\(${sqlEnum(jobRunStatuses)}\\)`));
   assert.match(sql, new RegExp(`status in \\(${sqlEnum(notificationStatuses)}\\)`));
   assert.match(sql, new RegExp(`channel in \\(${sqlEnum(notificationOutboxContract.channels)}\\)`));
   assert.match(
-    sql,
+    safetyRouting,
     new RegExp(`notification_type in \\(${sqlEnum(notificationOutboxContract.types)}\\)`)
   );
 });

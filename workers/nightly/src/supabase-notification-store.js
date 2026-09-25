@@ -9,7 +9,15 @@ const OUTBOX_STATUSES = new Set([
   "retryable_failed",
   "failed"
 ]);
+const NOTIFICATION_TYPES = new Set(notificationOutboxContract.types);
+const SAFETY_LEVELS = new Set(["none", "concern", "urgent"]);
 const { maxRetryAfterSeconds: MAX_RETRY_AFTER_SECONDS } = notificationOutboxContract.delivery;
+
+function hasValidSafetyRoute(value) {
+  return SAFETY_LEVELS.has(value?.safetyLevel)
+    && NOTIFICATION_TYPES.has(value?.notificationType)
+    && notificationOutboxContract.safetyRouting[value.safetyLevel] === value.notificationType;
+}
 
 function codedError(code, message, fields = {}) {
   return Object.assign(new Error(message), { code, ...fields });
@@ -72,6 +80,7 @@ export class SupabaseNotificationOutboxStore {
       !UUID_PATTERN.test(result?.notificationId ?? "")
       || result?.jobRunId !== jobRunId
       || result?.diaryId !== diaryId
+      || !hasValidSafetyRoute(result)
       || !OUTBOX_STATUSES.has(result?.status)
     ) {
       throw codedError(
@@ -88,26 +97,33 @@ export class SupabaseNotificationOutboxStore {
       p_notification_id: notificationId
     });
     if (result === null) return null;
-    if (
+    const commonInvalid = (
       result?.notificationId !== notificationId
       || !UUID_PATTERN.test(result?.jobRunId ?? "")
       || !UUID_PATTERN.test(result?.diaryId ?? "")
+      || !hasValidSafetyRoute(result)
       || !/^-?\d+$/.test(result?.recipientChatId ?? "")
       || !Number.isInteger(result?.attempt)
       || result.attempt < 1
       || !/^\d{4}-\d{2}-\d{2}$/.test(result?.day ?? "")
       || !Number.isInteger(result?.version)
       || result.version < 1
-      || typeof result?.title !== "string"
-      || result.title.length === 0
       || !Array.isArray(result?.blocks)
+    );
+    const diaryPayloadInvalid = result?.notificationType === "daily_diary" && (
+      typeof result?.title !== "string"
+      || result.title.length === 0
       || result.blocks.length === 0
       || result.blocks.some((block, index) => (
         block?.position !== index
         || typeof block?.text !== "string"
         || block.text.length === 0
       ))
-    ) {
+    );
+    const safetyPayloadInvalid = result?.notificationType === "safety_guidance" && (
+      result.title !== null || result.blocks.length !== 0
+    );
+    if (commonInvalid || diaryPayloadInvalid || safetyPayloadInvalid) {
       throw codedError(
         "SUPABASE_NOTIFICATION_INVALID_RESPONSE",
         "Supabase claim_diary_notification returned an invalid response"

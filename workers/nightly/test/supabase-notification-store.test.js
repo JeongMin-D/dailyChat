@@ -25,6 +25,8 @@ test("성공 일기 알림을 참조 식별자로 등록한다", async () => {
     notificationId: NOTIFICATION_ID,
     jobRunId: JOB_ID,
     diaryId: DIARY_ID,
+    notificationType: "daily_diary",
+    safetyLevel: "none",
     status: "pending"
   };
   const result = await createStore(expected, calls).enqueue({
@@ -45,6 +47,8 @@ test("claim은 bigint chat ID를 문자열로 유지하고 순서가 있는 bloc
     notificationId: NOTIFICATION_ID,
     jobRunId: JOB_ID,
     diaryId: DIARY_ID,
+    notificationType: "daily_diary",
+    safetyLevel: "none",
     recipientChatId: "9007199254740992",
     attempt: 1,
     day: "2026-09-24",
@@ -55,6 +59,32 @@ test("claim은 bigint chat ID를 문자열로 유지하고 순서가 있는 bloc
 
   assert.deepEqual(await createStore(payload).claim(NOTIFICATION_ID), payload);
   assert.equal(await createStore(null).claim(NOTIFICATION_ID), null);
+});
+
+test("urgent claim은 일기 본문 없는 safety guidance만 허용한다", async () => {
+  const guidance = {
+    notificationId: NOTIFICATION_ID,
+    jobRunId: JOB_ID,
+    diaryId: DIARY_ID,
+    notificationType: "safety_guidance",
+    safetyLevel: "urgent",
+    recipientChatId: "200",
+    attempt: 1,
+    day: "2026-09-24",
+    version: 1,
+    title: null,
+    blocks: []
+  };
+  assert.deepEqual(await createStore(guidance).claim(NOTIFICATION_ID), guidance);
+
+  await assert.rejects(
+    createStore({ ...guidance, title: "노출되면 안 되는 제목" }).claim(NOTIFICATION_ID),
+    (error) => error.code === "SUPABASE_NOTIFICATION_INVALID_RESPONSE"
+  );
+  await assert.rejects(
+    createStore({ ...guidance, notificationType: "daily_diary" }).claim(NOTIFICATION_ID),
+    (error) => error.code === "SUPABASE_NOTIFICATION_INVALID_RESPONSE"
+  );
 });
 
 test("전송 성공과 실패 상태 RPC에는 안정적인 metadata만 보낸다", async () => {

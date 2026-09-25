@@ -32,7 +32,7 @@ export const notificationTransitions = {
 
 export const notificationOutboxContract = {
   channels: ["telegram"],
-  types: ["daily_diary"],
+  types: ["daily_diary", "safety_guidance"],
   payloadPolicy: "reference-only",
   requiredReferences: ["job_run_id", "diary_id"],
   idempotency: {
@@ -46,6 +46,13 @@ export const notificationOutboxContract = {
     maxAttempts: 5,
     maxRetryAfterSeconds: 86_400,
     telegramMaxTextLength: 4_096
+  },
+  safetyRouting: {
+    none: "daily_diary",
+    concern: "daily_diary",
+    urgent: "safety_guidance",
+    urgentPayloadPolicy: "fixed-guidance-only",
+    automaticReporting: false
   }
 };
 

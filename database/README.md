@@ -62,6 +62,8 @@ outbox에는 사용자 원문이나 일기 본문을 복제하지 않습니다. 
 
 `none` 판정은 저장하지 않습니다. safety 테이블에는 원문 인용, 진단명, 자유 형식 추론, 일기·건강 내용을 넣지 않습니다. source snapshot 소속, reason code 중복, 부모당 최소 근거는 Worker의 저장 전 검증과 같은 트랜잭션에서 강제합니다.
 
+`0011_safety_notification_routing.sql`은 safety와 outbox를 연결합니다. none·concern은 `daily_diary`, urgent는 `safety_guidance`로 등록합니다. urgent notification은 claim 조건에서도 safety level을 다시 확인하고 diary title·block을 반환하지 않습니다.
+
 ## 메시지 시간 경계 무결성
 
 `0007_message_day_integrity.sql`은 원문 시각과 local day가 어긋난 메시지 저장을 차단합니다.

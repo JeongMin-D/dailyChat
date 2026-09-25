@@ -45,3 +45,10 @@
 - `TelegramNotificationDelivery`는 일반 텍스트를 4,096자 이내로 구성하고 성공 `message_id`를 저장합니다.
 - 429·5xx·네트워크 오류는 최대 5번까지 지수 backoff하고, 401·403과 나머지 4xx는 영구 실패로 기록합니다.
 - Telegram 성공 뒤 DB 완료 기록 전에 중단되면 중복 발송 가능성이 있으므로 stale claim과 provider message ID로 추적합니다.
+
+## D10 안전 알림 분기
+
+- safety `none`은 일반 일기, `concern`은 고정 지지 문구가 붙은 일기로 보냅니다.
+- `urgent`는 `safety_guidance` outbox로 바꾸고 claim 단계에서 diary title과 block을 제거합니다.
+- urgent 메시지는 코드에 고정된 112/119·109·1577-0199 안내만 사용하며 원문·일기·reason code를 포함하지 않습니다.
+- 시스템은 사용자 대신 자동 신고하거나 제3자에게 안전 내용을 보내지 않습니다.
