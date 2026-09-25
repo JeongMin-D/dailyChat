@@ -168,7 +168,7 @@ async function withRuntime(failOnceAt, run) {
     logger,
     fetchImpl: async (_url, init) => {
       telegramCalls.push(JSON.parse(init.body));
-      return json({ ok: true });
+      return json({ ok: true, result: { message_id: 301 } });
     }
   });
   const conversation = createConversationService({

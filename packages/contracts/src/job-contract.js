@@ -41,7 +41,12 @@ export const notificationOutboxContract = {
   },
   claimableStatuses: ["pending", "retryable_failed"],
   staleClaimStatus: "sending",
-  staleAfterMinutes: 5
+  staleAfterMinutes: 5,
+  delivery: {
+    maxAttempts: 5,
+    maxRetryAfterSeconds: 86_400,
+    telegramMaxTextLength: 4_096
+  }
 };
 
 export const jobRunReproducibilityContract = {

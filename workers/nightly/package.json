@@ -7,6 +7,8 @@
     "./extractor": "./src/nightly-extractor.js",
     "./input": "./src/nightly-input.js",
     "./output-store": "./src/supabase-output-store.js",
+    "./notification-store": "./src/supabase-notification-store.js",
+    "./notification-delivery": "./src/telegram-notification-delivery.js",
     "./prompt": "./src/nightly-prompt.js",
     "./store": "./src/supabase-input-store.js"
   }

@@ -39,4 +39,9 @@ test("claim 계약은 재시도 가능 상태와 stale 회수 시간을 고정�
   assert.deepEqual(notificationOutboxContract.claimableStatuses, ["pending", "retryable_failed"]);
   assert.equal(notificationOutboxContract.staleClaimStatus, "sending");
   assert.equal(notificationOutboxContract.staleAfterMinutes, 5);
+  assert.deepEqual(notificationOutboxContract.delivery, {
+    maxAttempts: 5,
+    maxRetryAfterSeconds: 86_400,
+    telegramMaxTextLength: 4_096
+  });
 });

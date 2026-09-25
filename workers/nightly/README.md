@@ -37,3 +37,11 @@
 - 성공한 동일 입력은 `noop`과 기존 diary ID/version을 반환하므로 추출을 다시 호출하지 않습니다.
 - 변경된 hash는 새 job을 만들고 `persist_nightly_extraction_versioned`가 날짜별 transaction lock 안에서 다음 diary version을 할당합니다.
 - 성공 job 저장 재호출은 기존 diary를 반환해 파생 데이터 중복을 막습니다.
+
+## D09 Telegram 일기 Outbox
+
+- `SupabaseNotificationOutboxStore.enqueue()`는 성공한 job과 diary 참조만 멱등 등록합니다.
+- claim RPC가 `sending` 전이와 동시에 diary block을 읽으며, outbox에는 본문을 복제하지 않습니다.
+- `TelegramNotificationDelivery`는 일반 텍스트를 4,096자 이내로 구성하고 성공 `message_id`를 저장합니다.
+- 429·5xx·네트워크 오류는 최대 5번까지 지수 backoff하고, 401·403과 나머지 4xx는 영구 실패로 기록합니다.
+- Telegram 성공 뒤 DB 완료 기록 전에 중단되면 중복 발송 가능성이 있으므로 stale claim과 provider message ID로 추적합니다.

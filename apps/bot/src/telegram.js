@@ -33,6 +33,20 @@ export function parseTextUpdate(update) {
   };
 }
 
+export class TelegramApiError extends Error {
+  /**
+   * @param {string} message
+   * @param {{status?: number, retryAfterSeconds?: number | null, code?: string}} options
+   */
+  constructor(message, { status, retryAfterSeconds = null, code = "TELEGRAM_SEND_FAILED" } = {}) {
+    super(message);
+    this.name = "TelegramApiError";
+    this.code = code;
+    this.status = status;
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
 export class TelegramClient {
   constructor({ token, timeoutMs, retry, fetchImpl = fetch, logger = null }) {
     this.baseUrl = `https://api.telegram.org/bot${token}`;
@@ -57,8 +71,37 @@ export class TelegramClient {
       })
     });
 
-    if (!response.ok) {
-      throw new Error(`Telegram send failed with status ${response.status}`);
+    let payload;
+    try {
+      payload = await response.json();
+    } catch {
+      throw response.ok
+        ? new TelegramApiError("Telegram returned an invalid response", {
+            status: response.status,
+            code: "TELEGRAM_INVALID_RESPONSE"
+          })
+        : new TelegramApiError(`Telegram send failed with status ${response.status}`, {
+            status: response.status
+          });
     }
+
+    const retryAfterSeconds = Number(payload?.parameters?.retry_after);
+    if (!response.ok || payload?.ok !== true) {
+      throw new TelegramApiError(`Telegram send failed with status ${response.status}`, {
+        status: response.status,
+        retryAfterSeconds: Number.isInteger(retryAfterSeconds) && retryAfterSeconds >= 0
+          ? retryAfterSeconds
+          : null
+      });
+    }
+
+    if (!Number.isSafeInteger(payload?.result?.message_id)) {
+      throw new TelegramApiError("Telegram response is missing a message ID", {
+        status: response.status,
+        code: "TELEGRAM_INVALID_RESPONSE"
+      });
+    }
+
+    return { messageId: String(payload.result.message_id) };
   }
 }
