@@ -3,7 +3,7 @@ aliases:
   - DailyChat GitHub Actions Scheduler
 tags: [mindcompanion, nightly, github-actions, scheduler, m2]
 status: active
-updated: 2026-09-25
+updated: 2026-09-26
 ---
 
 # GitHub Actions Scheduler
@@ -39,8 +39,8 @@ GitHub 저장소 `Settings → Secrets and variables → Actions`에 아래 이�
 
 1. [x] Actions Secret 3개 등록
 2. [x] `Nightly diary`를 `dry-run`으로 수동 실행하고 Groq 구조화 출력 성공 확인
-3. 처리 대상 날짜를 확인한 뒤 `live` 수동 실행
-4. Supabase의 job, diary, outbox 성공 상태와 Telegram 수신 확인
+3. [x] 처리 대상 날짜를 확인한 뒤 `live` 수동 실행
+4. [x] Supabase의 job, diary, outbox 성공 상태와 Telegram 전송 확인
 5. 다음 04:05 KST 예약 실행 확인
 6. 실패 재실행에서 동일 입력 no-op과 알림 멱등성 확인
 
@@ -50,4 +50,6 @@ workflow, 정적 계약 테스트, Actions Secret 등록과 GitHub-hosted runner
 
 첫 실행은 `.env` 파일 부재 때문에 실패해 smoke 명령을 `--env-file-if-exists=.env`로 수정했다. 이후 Groq가 strict Structured Output 400을 두 번 반환했으나 같은 입력의 재실행에서 성공했다. Groq 공식 문서도 400 발생 시 재현 제보를 안내하므로, 예약 실행에서 같은 오류가 반복되면 제한된 400 재시도 정책을 추가 검토한다.
 
-남은 단계는 처리 대상 날짜를 확인한 수동 live 실행과 첫 04:05 KST 예약 실행 검증이다.
+2026-09-24 live는 run `36191065811`에서 완료됐다. job succeeded, diary version 1, outbox sent와 Telegram provider message ID를 확인했다.
+
+남은 단계는 첫 04:05 KST 예약 실행과 동일 날짜 중복 재실행의 무중복 검증이다. 중복 재실행은 실제 Telegram 동작 가능성이 있어 별도 승인 후 수행한다.

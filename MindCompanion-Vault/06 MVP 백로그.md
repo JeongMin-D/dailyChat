@@ -1,7 +1,7 @@
 ---
 tags: [mindcompanion, backlog]
 status: active
-updated: 2026-09-25
+updated: 2026-09-26
 ---
 
 # MVP 백로그
@@ -10,7 +10,7 @@ updated: 2026-09-25
 
 ## 현재 포커스
 
-- 현재 단계: M1 완료, M2 GitHub Actions scheduler 첫 live 실행 대기
+- 현재 단계: M1 완료, M2 GitHub Actions 첫 live 완료·예약 실행 대기
 - 완료: ADR-001~006 P0 결정 승인 및 문서화
 - 완료: C01 event/mood/health/diary JSON Schema와 의미 검증
 - 완료: C02 DB 제약과 애플리케이션 타입 target 계약 및 자동 대조
@@ -27,7 +27,9 @@ updated: 2026-09-25
 - 완료: M2 scheduler 진입점→추출→저장→알림 종단 실행기 연결
 - 완료: 실제 Groq + 합성 adapter 종단 dry-run, GitHub Actions 04:05 KST scheduler 구성
 - 완료: Actions Secret 3개 등록과 GitHub-hosted runner dry-run 성공
-- 다음 작업: 처리 날짜 확인 후 수동 live 실행과 첫 예약 실행 검증
+- 완료: 2026-09-24 메시지 5건의 diary version 1 저장과 Telegram 전송
+- 완료: Groq structured output 400의 3회 제한 재시도와 안전한 오류 metadata
+- 다음 작업: 첫 04:05 KST 예약 실행과 동일 날짜 중복 재실행 검증
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
