@@ -22,3 +22,11 @@
 - 두 번째 실패, refusal, HTTP 오류는 안정적인 오류 코드로 종료합니다.
 - 사용자 메시지가 0건이면 Groq를 호출하지 않습니다.
 - `npm run smoke:nightly`는 합성 입력만 사용합니다. 실제 Supabase 원문을 쓰는 `smoke:nightly:live-data`는 데이터 외부 전송 승인을 받은 경우에만 실행합니다.
+
+## D05~D06 원자적 결과 저장
+
+- `SupabaseNightlyOutputStore`는 저장 직전 snapshot day와 source ID 계약을 다시 검사합니다.
+- 검증된 결과는 `persist_nightly_extraction` RPC 한 번으로만 전송합니다.
+- RPC는 job row를 잠그고 domain row, diary block, 원문/event 근거, 제한 safety metadata를 한 트랜잭션으로 저장합니다.
+- 성공한 경우에만 job을 `succeeded`로 바꾸며, 중간 오류는 전체 rollback됩니다.
+- 함수는 `SECURITY INVOKER`이고 `service_role`만 실행할 수 있습니다.

@@ -6,6 +6,7 @@
   "exports": {
     "./extractor": "./src/nightly-extractor.js",
     "./input": "./src/nightly-input.js",
+    "./output-store": "./src/supabase-output-store.js",
     "./prompt": "./src/nightly-prompt.js",
     "./store": "./src/supabase-input-store.js"
   }
