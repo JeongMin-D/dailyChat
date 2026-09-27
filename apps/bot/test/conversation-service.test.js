@@ -34,6 +34,7 @@ function update(overrides = {}) {
 function setup({
   claimed = true,
   existingReply = null,
+  memories = [],
   history = [],
   llmError,
   sendError,
@@ -44,6 +45,7 @@ function setup({
     async claimUpdate(id) { calls.push(["claim", id]); return claimed; },
     async saveUserMessage(message) { calls.push(["save-user", message]); },
     async findAssistantReply(id) { calls.push(["find-reply", id]); return existingReply; },
+    async listActiveMemories(input) { calls.push(["list-memories", input]); return memories; },
     async listRecentMessages(input) { calls.push(["list-history", input]); return history; },
     async saveAssistantReply(message) { calls.push(["save-assistant", message]); },
     async completeUpdate(id) { calls.push(["complete", id]); },
@@ -154,6 +156,7 @@ test("사용자 원문을 LLM 호출 전에 저장하고 응답을 전송한다"
     "claim",
     "save-user",
     "find-reply",
+    "list-memories",
     "list-history",
     "llm",
     "save-assistant",
@@ -165,6 +168,22 @@ test("사용자 원문을 LLM 호출 전에 저장하고 응답을 전송한다"
     { role: "system", content: "테스트 SOUL" },
     { role: "user", content: "오늘 HMI 문제를 해결했어" }
   ]);
+});
+
+test("활성 기억을 조회해 대화 Context에 전달한다", async () => {
+  const memories = [{ category: "preference", fact: "차를 좋아한다" }];
+  const { service, calls } = setup({ memories });
+
+  await service.handle({ secret: "test-secret", update: update() });
+
+  assert.deepEqual(calls.find(([name]) => name === "list-memories")[1], {
+    day: calls.find(([name]) => name === "save-user")[1].day,
+    limit: 8
+  });
+  assert.match(
+    calls.find(([name]) => name === "llm")[1].messages[1].content,
+    /\[preference\] 차를 좋아한다/
+  );
 });
 
 test("Telegram UTC 시각을 KST 04:00 경계의 local day로 저장한다", async () => {

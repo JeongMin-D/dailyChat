@@ -100,6 +100,18 @@ export class SupabaseMessageStore {
     });
   }
 
+  async listActiveMemories({ day, limit }) {
+    const params = new URLSearchParams({
+      status: "eq.confirmed",
+      valid_from: `lte.${day}`,
+      or: `(valid_to.is.null,valid_to.gte.${day})`,
+      select: "category,fact",
+      order: "updated_at.desc",
+      limit: String(limit)
+    });
+    return (await this.request(`/memory_candidates?${params}`, { method: "GET" })) ?? [];
+  }
+
   async saveAssistantReply({ updateId, chatId, text, sentAt, day }) {
     await this.request("/messages", {
       method: "POST",

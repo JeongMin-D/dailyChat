@@ -121,6 +121,10 @@ function createDataApi({ failOnceAt }) {
         return json([]);
       }
 
+      if (url.pathname.endsWith("/memory_candidates") && method === "GET") {
+        return json([]);
+      }
+
       if (url.pathname.endsWith("/telegram_updates") && method === "PATCH") {
         const updateId = Number(url.searchParams.get("update_id")?.replace("eq.", ""));
         Object.assign(state.updates.get(updateId), body);

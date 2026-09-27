@@ -83,6 +83,7 @@ export function createConversationService({
 
         let reply = await store.findAssistantReply(message.updateId);
         if (!reply) {
+          const memories = await store.listActiveMemories({ day, limit: 8 });
           const history = config.conversation.historyLimit === 0
             ? []
             : await store.listRecentMessages({
@@ -92,6 +93,7 @@ export function createConversationService({
               });
           const messages = buildConversationMessages({
             systemPrompt,
+            memories,
             history,
             currentText: message.text,
             maxContextChars: config.conversation.maxContextChars

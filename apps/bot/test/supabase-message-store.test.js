@@ -99,6 +99,28 @@ test("최근 대화를 조회하고 시간 순서로 반환한다", async () => 
   ]);
 });
 
+test("확정되고 처리일에 유효한 기억만 최신순으로 조회한다", async () => {
+  let requestUrl;
+  const store = new SupabaseMessageStore({
+    url: "https://example.supabase.co",
+    serviceRoleKey: "sb_secret_test",
+    timeoutMs: 1000,
+    fetchImpl: async (url) => {
+      requestUrl = new URL(url);
+      return response([{ category: "preference", fact: "차를 좋아한다" }]);
+    }
+  });
+
+  const memories = await store.listActiveMemories({ day: "2026-09-28", limit: 8 });
+
+  assert.equal(requestUrl.searchParams.get("status"), "eq.confirmed");
+  assert.equal(requestUrl.searchParams.get("valid_from"), "lte.2026-09-28");
+  assert.equal(requestUrl.searchParams.get("or"), "(valid_to.is.null,valid_to.gte.2026-09-28)");
+  assert.equal(requestUrl.searchParams.get("order"), "updated_at.desc");
+  assert.equal(requestUrl.searchParams.get("limit"), "8");
+  assert.deepEqual(memories, [{ category: "preference", fact: "차를 좋아한다" }]);
+});
+
 test("기억 결정 RPC에 후보와 검증된 Telegram identity를 전달한다", async () => {
   let request;
   const store = new SupabaseMessageStore({
