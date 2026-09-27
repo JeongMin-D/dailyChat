@@ -1,6 +1,6 @@
 ---
 tags: [mindcompanion, dashboard, security]
-status: in-progress
+status: complete
 date: 2026-09-27
 ---
 
@@ -14,4 +14,7 @@ date: 2026-09-27
 - GitHub push 뒤 Render 자동 배포가 생성되지 않는 문제를 재현했고, 최신 커밋은 수동 배포해 live 상태로 올렸다.
 - 운영 health 200, 미인증 Dashboard 401, 배포 이후 오류 로그 0건을 확인했다.
 - 다음 단계는 안전한 운영 인증값 확정·동기화와 인증 200 확인이다.
-- Render 자동 배포 복구는 Dashboard에서 GitHub 저장소 연결을 갱신한 뒤 다시 검증해야 한다.
+- Render GitHub App 설치가 `healthCare`만 허용해 `dailyChat` push 이벤트를 받지 못한 것이 자동 배포 실패 원인이었다.
+- GitHub App에 `dailyChat` 저장소 권한을 추가하고 Render 자격 증명 목록에서 두 저장소가 모두 노출되는 것을 확인했다.
+- 빈 검증 커밋 `2100ad5`를 push하자 deploy `dep-dasd6uc9v7es73etafmg`가 `new_commit`으로 자동 생성되어 live가 됐고, 공개 `/health`가 200 `{"status":"ok"}`를 반환했다.
+- 남은 P0 작업은 안전한 운영 인증값 확정·동기화 후 인증 200 확인과 이전 정상 deploy 롤백 검증이다.
