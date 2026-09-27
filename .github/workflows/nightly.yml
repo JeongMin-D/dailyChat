@@ -32,6 +32,21 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      - name: Record schedule delay
+        id: schedule_timing
+        if: github.event_name == 'schedule'
+        shell: bash
+        run: |
+          now=$(date -u +%s)
+          scheduled=$(date -u -d "$(date -u +%F) 19:05:00" +%s)
+          if (( now < scheduled )); then scheduled=$((scheduled - 86400)); fi
+          delay_minutes=$(((now - scheduled) / 60))
+          echo "delay_minutes=$delay_minutes" >> "$GITHUB_OUTPUT"
+          echo "- Schedule delay: ${delay_minutes} minutes (warning: 30, ceiling: 240)" >> "$GITHUB_STEP_SUMMARY"
+          if (( delay_minutes > 30 )); then
+            echo "::warning title=Nightly schedule delayed::Started ${delay_minutes} minutes after 04:05 KST."
+          fi
+
       - name: Checkout
         uses: actions/checkout@v7
 
@@ -77,3 +92,14 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: npm run run:nightly
+
+      - name: Enforce schedule delay ceiling
+        if: always() && github.event_name == 'schedule'
+        shell: bash
+        env:
+          DELAY_MINUTES: ${{ steps.schedule_timing.outputs.delay_minutes }}
+        run: |
+          if [[ ! "$DELAY_MINUTES" =~ ^[0-9]+$ ]] || (( DELAY_MINUTES > 240 )); then
+            echo "::error title=Nightly schedule delay exceeded::Delay was ${DELAY_MINUTES:-unknown} minutes; ceiling is 240."
+            exit 1
+          fi

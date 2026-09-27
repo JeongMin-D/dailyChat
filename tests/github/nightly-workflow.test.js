@@ -41,6 +41,14 @@ test("workflow 권한과 실행 환경을 최소 범위로 고정한다", () => 
   assert.doesNotMatch(workflow, /gsk_[A-Za-z0-9_-]+|sb_secret_[A-Za-z0-9_-]+/);
 });
 
+test("예약 지연을 기록하고 30분 경고·240분 실패 기준을 적용한다", () => {
+  assert.match(workflow, /name: Record schedule delay/);
+  assert.match(workflow, /GITHUB_STEP_SUMMARY/);
+  assert.match(workflow, /delay_minutes > 30/);
+  assert.match(workflow, /name: Enforce schedule delay ceiling/);
+  assert.match(workflow, /DELAY_MINUTES > 240/);
+});
+
 test("nightly dry-run은 CI에서 로컬 .env 없이 실행할 수 있다", () => {
   assert.equal(
     packageJson.scripts["smoke:nightly:pipeline"],

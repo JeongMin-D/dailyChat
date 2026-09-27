@@ -3,7 +3,7 @@ aliases:
   - DailyChat GitHub Actions Scheduler
 tags: [mindcompanion, nightly, github-actions, scheduler, m2]
 status: active
-updated: 2026-09-26
+updated: 2026-09-28
 ---
 
 # GitHub Actions Scheduler
@@ -22,6 +22,8 @@ updated: 2026-09-26
 - 권한: `contents: read`
 - 동시성: `nightly-diary` 한 건씩 실행
 - timeout: 15분
+- 지연 경고: 예약 시각보다 30분 초과
+- 운영 상한: 예약 시각보다 240분 초과 시 파이프라인 실행 후 workflow 실패 처리
 
 예약 실행은 항상 live다. 수동 실행은 실수 방지를 위해 dry-run이 기본이며, dry-run에는 Groq key만 전달한다. Supabase와 Telegram 비밀값은 live step에서만 사용할 수 있다.
 
@@ -41,8 +43,18 @@ GitHub 저장소 `Settings → Secrets and variables → Actions`에 아래 이�
 2. [x] `Nightly diary`를 `dry-run`으로 수동 실행하고 Groq 구조화 출력 성공 확인
 3. [x] 처리 대상 날짜를 확인한 뒤 `live` 수동 실행
 4. [x] Supabase의 job, diary, outbox 성공 상태와 Telegram 전송 확인
-5. 다음 04:05 KST 예약 실행 확인
+5. [x] 04:05 KST 예약 실행 2회와 실제 시작 지연 확인
 6. [x] 실패 재실행에서 동일 입력 no-op과 알림 멱등성 확인
+
+## 운영 기준과 재실행
+
+- 예약 run `36195668147`은 188분, `36274617442`는 171분 늦게 시작했으며 둘 다 성공했다.
+- GitHub Actions 예약은 부하에 따라 지연되거나 드물게 누락될 수 있으므로 04:05 정시 실행을 보장하지 않는다.
+- 현재 제품은 처리 대상 날짜를 명시하고 재실행이 멱등하므로 4시간 이내 지연을 허용한다. 30분 초과는 run warning과 summary에 기록한다.
+- 4시간을 넘기면 일기 처리를 먼저 시도한 뒤 workflow를 실패 처리한다. GitHub 개인 알림 설정에서 Actions의 실패한 workflow 알림을 활성화한다.
+- 실패하면 Actions의 해당 run에서 `Re-run failed jobs`를 실행한다. 예약 자체가 누락됐으면 `Run workflow`에서 `live`와 처리 대상 `target_day`를 지정한다.
+- 재실행 후 `job_runs`, diary, outbox와 Telegram 수신을 대조한다. 동일 입력은 기존 no-op·멱등 계약을 따른다.
+- 04:05 정시성이 필수가 되기 전까지 GitHub Actions 하나만 유지하고 중복 scheduler는 추가하지 않는다.
 
 ## 현재 상태
 
@@ -54,6 +66,6 @@ workflow, 정적 계약 테스트, Actions Secret 등록과 GitHub-hosted runner
 
 동일 날짜 재실행 run `36191616679`는 action `noop`, delivery `not_claimed`로 완료됐다. job, diary, outbox 수와 attempt, Telegram provider message ID가 증가하지 않았다.
 
-실제 live와 중복 검증 로그에서 등록한 API 키·토큰 3개와 사용자 원문 5건을 대조해 노출이 없음을 확인했다. 남은 단계는 첫 04:05 KST 예약 실행 검증뿐이다.
+실제 live와 중복 검증 로그에서 등록한 API 키·토큰 3개와 사용자 원문 5건을 대조해 노출이 없음을 확인했다.
 
 사용자 요청으로 2026-09-26 06:37 KST에 즉시 live run `36192530118`도 실행했다. 파이프라인은 2026-09-25 처리일을 선택했고, Supabase 대조에서 user message·nightly job·diary·outbox가 모두 0건임을 확인해 `no_user_messages`로 skip했다. 새 Groq 호출, DB 쓰기, Telegram 전송은 발생하지 않았다. 이 검증은 수동 live 경로의 빈 입력 안전성을 보강하며, 첫 예약 실행 자체의 확인은 대체하지 않는다.
