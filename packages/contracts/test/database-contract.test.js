@@ -4,6 +4,7 @@ import {
   diarySchema,
   eventSchema,
   healthSchema,
+  memoryCandidateSchema,
   moodSchema,
   nightlyDatabaseContract,
   nightlyExtractionSchema,
@@ -14,6 +15,7 @@ const schemaMappings = [
   ["event", eventSchema],
   ["mood", moodSchema],
   ["health", healthSchema],
+  ["memoryCandidate", memoryCandidateSchema],
   ["safety", safetySchema],
   ["diary", diarySchema]
 ];
@@ -52,6 +54,7 @@ test("enum과 수치 범위가 JSON Schema와 DB 계약에서 일치한다", () 
   assertConstraint(mappings.event, eventSchema, ["type"]);
   assertConstraint(mappings.mood, moodSchema, ["source"]);
   assertConstraint(mappings.safety, safetySchema, ["level"]);
+  assertConstraint(mappings.memoryCandidate, memoryCandidateSchema, ["category"]);
   assert.deepEqual(
     mappings.safety.reasonCodes.allowedItems,
     safetySchema.properties.reasonCodes.items.enum
@@ -62,7 +65,8 @@ test("enum과 수치 범위가 JSON Schema와 DB 계약에서 일치한다", () 
     [mappings.mood, moodSchema, "score"],
     [mappings.mood, moodSchema, "confidence"],
     [mappings.health, healthSchema, "severity"],
-    [mappings.health, healthSchema, "confidence"]
+    [mappings.health, healthSchema, "confidence"],
+    [mappings.memoryCandidate, memoryCandidateSchema, "confidence"]
   ]) {
     assert.equal(mapping[field].minimum, schema.properties[field].minimum);
     assert.equal(mapping[field].maximum, schema.properties[field].maximum);
@@ -78,6 +82,7 @@ test("nullable 계약과 PostgreSQL timestamptz 저장 타입이 일치한다", 
   assert.equal(mappings.health.severity.nullable, true);
   assert.equal(mappings.health.note.nullable, true);
   assert.equal(mappings.diary.summaryMood.nullable, true);
+  assert.equal(mappings.memoryCandidate.validTo.nullable, true);
 });
 
 test("원문 근거 배열은 JSON/배열 컬럼이 아니라 FK 연결 테이블로 저장한다", () => {
@@ -86,6 +91,7 @@ test("원문 근거 배열은 JSON/배열 컬럼이 아니라 FK 연결 테이�
     nightlyDatabaseContract.mappings.mood.sourceMessageIds,
     nightlyDatabaseContract.mappings.health.sourceMessageIds,
     nightlyDatabaseContract.mappings.safety.sourceMessageIds,
+    nightlyDatabaseContract.mappings.memoryCandidate.sourceMessageIds,
     nightlyDatabaseContract.mappings.diaryBlock.sourceMessageIds
   ];
 

@@ -198,6 +198,7 @@ console.log(JSON.stringify({
   eventCount: persistedOutput.events.length,
   moodCount: persistedOutput.moods.length,
   healthEntryCount: persistedOutput.healthEntries.length,
+  memoryCandidateCount: persistedOutput.memoryCandidates.length,
   diaryBlockCount: persistedOutput.diary.blocks.length,
   telegramTextLength,
   stages: calls

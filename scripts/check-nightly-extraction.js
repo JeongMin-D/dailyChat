@@ -53,7 +53,7 @@ const input = useLiveData
           return [{
             id: "00000000-0000-4000-8000-000000000001",
             sent_at: `${day}T03:00:00.000Z`,
-            content: "오늘 구조화 출력 검증을 마쳤고 마음이 차분하다."
+            content: "나는 채식주의자라 앞으로 식사 추천에는 고기를 빼 줘. 오늘 구조화 출력 검증도 마쳤다."
           }];
         }
       }
@@ -72,6 +72,9 @@ const extractor = new GroqNightlyExtractor({
 });
 const result = await extractor.extract({ snapshot });
 const output = result.output;
+if (!useLiveData && (output?.memoryCandidates.length ?? 0) < 1) {
+  throw new Error("Synthetic durable preference did not produce a memory candidate");
+}
 
 console.log(JSON.stringify({
   event: "nightly_extraction_verified",
@@ -88,6 +91,7 @@ console.log(JSON.stringify({
   eventCount: output?.events.length ?? 0,
   moodCount: output?.moods.length ?? 0,
   healthEntryCount: output?.healthEntries.length ?? 0,
+  memoryCandidateCount: output?.memoryCandidates.length ?? 0,
   diaryBlockCount: output?.diary.blocks.length ?? 0,
   safetyLevel: output?.safety.level ?? null,
   usage: result.usage

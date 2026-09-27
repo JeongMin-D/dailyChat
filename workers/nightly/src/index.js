@@ -78,7 +78,7 @@ const runner = new NightlyPipelineRunner({
   outputStore,
   notificationStore,
   notificationDelivery,
-  pipelineVersion: process.env.NIGHTLY_PIPELINE_VERSION?.trim() || "nightly-pipeline-v1",
+  pipelineVersion: process.env.NIGHTLY_PIPELINE_VERSION?.trim() || "nightly-pipeline-v2",
   timeZone: process.env.APP_TIMEZONE?.trim() || "Asia/Seoul",
   boundaryHour: integer("DAY_BOUNDARY_HOUR", 4, 0, 23),
   logger

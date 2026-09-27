@@ -83,6 +83,39 @@ const healthDefinition = {
   ]
 };
 
+const memoryCandidateDefinition = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    category: {
+      type: "string",
+      enum: [
+        "profile",
+        "preference",
+        "relationship",
+        "project",
+        "decision",
+        "routine",
+        "health",
+        "other"
+      ]
+    },
+    fact: { type: "string", minLength: 1, maxLength: 500 },
+    confidence: { type: "number", minimum: 0, maximum: 1 },
+    validFrom: { type: "string", pattern: LOCAL_DAY_PATTERN },
+    validTo: { type: ["string", "null"], pattern: LOCAL_DAY_PATTERN },
+    sourceMessageIds
+  },
+  required: [
+    "category",
+    "fact",
+    "confidence",
+    "validFrom",
+    "validTo",
+    "sourceMessageIds"
+  ]
+};
+
 const diaryBlockDefinition = {
   type: "object",
   additionalProperties: false,
@@ -165,6 +198,11 @@ export const healthSchema = standaloneSchema(
   healthDefinition
 );
 
+export const memoryCandidateSchema = standaloneSchema(
+  "https://dailychat.local/schemas/memory-candidate.schema.json",
+  memoryCandidateDefinition
+);
+
 export const diarySchema = standaloneSchema(
   "https://dailychat.local/schemas/diary.schema.json",
   diaryDefinition
@@ -181,7 +219,7 @@ export const nightlyExtractionSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    schemaVersion: { type: "string", enum: ["1.0.0"] },
+    schemaVersion: { type: "string", enum: ["1.1.0"] },
     day: { type: "string", pattern: LOCAL_DAY_PATTERN },
     events: {
       type: "array",
@@ -199,14 +237,29 @@ export const nightlyExtractionSchema = {
       items: { $ref: "#/$defs/health" },
       maxItems: 100
     },
+    memoryCandidates: {
+      type: "array",
+      items: { $ref: "#/$defs/memoryCandidate" },
+      maxItems: 20
+    },
     safety: { $ref: "#/$defs/safety" },
     diary: { $ref: "#/$defs/diary" }
   },
-  required: ["schemaVersion", "day", "events", "moods", "healthEntries", "safety", "diary"],
+  required: [
+    "schemaVersion",
+    "day",
+    "events",
+    "moods",
+    "healthEntries",
+    "memoryCandidates",
+    "safety",
+    "diary"
+  ],
   $defs: {
     event: eventDefinition,
     mood: moodDefinition,
     health: healthDefinition,
+    memoryCandidate: memoryCandidateDefinition,
     safety: safetyDefinition,
     diary: diaryDefinition
   }

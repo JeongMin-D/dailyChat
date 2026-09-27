@@ -20,7 +20,7 @@ services:
       - key: DAY_BOUNDARY_HOUR
         value: "4"
       - key: NIGHTLY_PIPELINE_VERSION
-        value: nightly-pipeline-v1
+        value: nightly-pipeline-v2
       - key: UPSTREAM_TIMEOUT_MS
         value: "60000"
       - key: UPSTREAM_RETRY_MAX_ATTEMPTS

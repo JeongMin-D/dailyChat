@@ -16,7 +16,7 @@ function snapshot(messages = [{
 
 function validOutput(overrides = {}) {
   return {
-    schemaVersion: "1.0.0",
+    schemaVersion: "1.1.0",
     day: "2026-09-24",
     events: [{
       eventRef: "event-1",
@@ -36,6 +36,14 @@ function validOutput(overrides = {}) {
       sourceMessageIds: [MESSAGE_ID]
     }],
     healthEntries: [],
+    memoryCandidates: [{
+      category: "project",
+      fact: "계약 작업을 장기간 진행하고 있다",
+      confidence: 0.9,
+      validFrom: "2026-09-24",
+      validTo: null,
+      sourceMessageIds: [MESSAGE_ID]
+    }],
     safety: {
       level: "none",
       reasonCodes: [],
@@ -97,8 +105,8 @@ test("strict JSON Schema 요청과 검증된 결과 메타데이터를 반환한
   assert.equal(result.status, "completed");
   assert.equal(result.attempts, 1);
   assert.equal(result.model, "openai/gpt-oss-120b");
-  assert.equal(result.promptVersion, "nightly-v1");
-  assert.equal(result.schemaVersion, "1.0.0");
+  assert.equal(result.promptVersion, "nightly-v2");
+  assert.equal(result.schemaVersion, "1.1.0");
   assert.deepEqual(result.usage, {
     prompt_tokens: 100,
     completion_tokens: 200,

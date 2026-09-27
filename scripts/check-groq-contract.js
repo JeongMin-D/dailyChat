@@ -97,6 +97,7 @@ console.log(JSON.stringify({
   eventCount: output.events.length,
   moodCount: output.moods.length,
   healthEntryCount: output.healthEntries.length,
+  memoryCandidateCount: output.memoryCandidates.length,
   diaryBlockCount: output.diary.blocks.length,
   safetyLevel: output.safety.level
 }));

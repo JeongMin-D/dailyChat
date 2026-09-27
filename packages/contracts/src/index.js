@@ -2,6 +2,7 @@ export {
   diarySchema,
   eventSchema,
   healthSchema,
+  memoryCandidateSchema,
   moodSchema,
   nightlyExtractionSchema,
   safetySchema
@@ -24,6 +25,7 @@ export {
   validateDiary,
   validateEvent,
   validateHealth,
+  validateMemoryCandidate,
   validateMood,
   validateNightlyExtraction,
   validateNightlyExtractionShape,

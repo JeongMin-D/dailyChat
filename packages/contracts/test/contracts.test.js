@@ -6,6 +6,7 @@ import {
   validateDiary,
   validateEvent,
   validateHealth,
+  validateMemoryCandidate,
   validateMood,
   validateNightlyExtraction,
   validateSafety
@@ -16,7 +17,7 @@ const MESSAGE_2 = "22222222-2222-4222-8222-222222222222";
 
 function validResult() {
   return {
-    schemaVersion: "1.0.0",
+    schemaVersion: "1.1.0",
     day: "2026-09-24",
     events: [{
       eventRef: "event-1",
@@ -42,6 +43,14 @@ function validResult() {
       occurredAt: null,
       confidence: 0.7,
       sourceMessageIds: [MESSAGE_1]
+    }],
+    memoryCandidates: [{
+      category: "project",
+      fact: "데이터 계약 프로젝트를 장기간 진행하고 있다.",
+      confidence: 0.9,
+      validFrom: "2026-09-24",
+      validTo: null,
+      sourceMessageIds: [MESSAGE_1, MESSAGE_2]
     }],
     safety: {
       level: "none",
@@ -91,11 +100,12 @@ test("Groq strict mode에 맞게 모든 object 필드를 required로 고정한�
   assertGroqStrictObjects(nightlyExtractionSchema);
 });
 
-test("event, mood, health, diary, safety 개별 계약을 검증한다", () => {
+test("event, mood, health, memory, diary, safety 개별 계약을 검증한다", () => {
   const value = validResult();
   assert.equal(validateEvent(value.events[0]).valid, true);
   assert.equal(validateMood(value.moods[0]).valid, true);
   assert.equal(validateHealth(value.healthEntries[0]).valid, true);
+  assert.equal(validateMemoryCandidate(value.memoryCandidates[0]).valid, true);
   assert.equal(validateDiary(value.diary).valid, true);
   assert.equal(validateSafety(value.safety).valid, true);
 });
@@ -155,11 +165,29 @@ test("Groq 미지원 uniqueItems 대신 의미 검증으로 중복 배열 값을
   const value = validResult();
   value.events[0].keywords = ["계약", "계약"];
   value.diary.blocks[0].sourceMessageIds = [MESSAGE_1, MESSAGE_1];
+  value.memoryCandidates[0].sourceMessageIds = [MESSAGE_1, MESSAGE_1];
 
   const result = validateNightlyExtraction(value);
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.params.duplicate === "계약"));
   assert.ok(result.errors.some((error) => error.params.duplicate === MESSAGE_1));
+});
+
+test("기억 후보는 당일 시작·종료일 없음·중복 없는 사실만 허용한다", () => {
+  const invalidRange = validResult();
+  invalidRange.memoryCandidates[0].validFrom = "2026-09-23";
+  assert.equal(validateNightlyExtraction(invalidRange).valid, false);
+
+  const duplicate = validResult();
+  duplicate.memoryCandidates.push({
+    ...duplicate.memoryCandidates[0],
+    fact: "  데이터 계약 프로젝트를 장기간 진행하고 있다.  "
+  });
+  const result = validateNightlyExtraction(duplicate);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => (
+    error.message === "memory candidate category and fact must be unique"
+  )));
 });
 
 test("안전 등급과 제한된 근거 메타데이터의 일관성을 검사한다", () => {
@@ -184,6 +212,21 @@ test("입력 snapshot 밖의 source message ID를 거부한다", () => {
 
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.params.sourceMessageId === MESSAGE_2));
+});
+
+test("기억 후보도 입력 snapshot 밖의 원문 근거를 거부한다", () => {
+  const value = validResult();
+  value.memoryCandidates[0].sourceMessageIds = [
+    "33333333-3333-4333-8333-333333333333"
+  ];
+  const result = validateNightlyExtraction(value, {
+    allowedMessageIds: [MESSAGE_1, MESSAGE_2]
+  });
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => (
+    error.message === "sourceMessageId must belong to the input snapshot"
+  )));
 });
 
 test("출력 day가 명시된 snapshot day와 다르면 거부한다", () => {

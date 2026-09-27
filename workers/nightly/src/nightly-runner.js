@@ -16,7 +16,7 @@ export class NightlyPipelineRunner {
     outputStore,
     notificationStore,
     notificationDelivery,
-    pipelineVersion = "nightly-pipeline-v1",
+    pipelineVersion = "nightly-pipeline-v2",
     schemaVersion = jobRunReproducibilityContract.schemaVersions[0],
     provider = jobRunReproducibilityContract.provider,
     timeZone = "Asia/Seoul",

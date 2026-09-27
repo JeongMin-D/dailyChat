@@ -3,6 +3,7 @@ import {
   diarySchema,
   eventSchema,
   healthSchema,
+  memoryCandidateSchema,
   moodSchema,
   nightlyExtractionSchema,
   safetySchema
@@ -15,6 +16,7 @@ const validators = {
   diary: ajv.compile(diarySchema),
   event: ajv.compile(eventSchema),
   health: ajv.compile(healthSchema),
+  memoryCandidate: ajv.compile(memoryCandidateSchema),
   mood: ajv.compile(moodSchema),
   nightlyExtraction: ajv.compile(nightlyExtractionSchema),
   safety: ajv.compile(safetySchema)
@@ -39,6 +41,7 @@ function collectSourceIds(value) {
     ...value.events.flatMap((item) => item.sourceMessageIds),
     ...value.moods.flatMap((item) => item.sourceMessageIds),
     ...value.healthEntries.flatMap((item) => item.sourceMessageIds),
+    ...value.memoryCandidates.flatMap((item) => item.sourceMessageIds),
     ...value.safety.sourceMessageIds,
     ...value.diary.blocks.flatMap((item) => item.sourceMessageIds)
   ];
@@ -82,6 +85,29 @@ function semanticErrors(value, allowedMessageIds, expectedDay) {
   value.healthEntries.forEach((entry, index) => {
     addDuplicateErrors(errors, `/healthEntries/${index}/sourceMessageIds`, entry.sourceMessageIds);
   });
+  const candidateKeys = value.memoryCandidates.map((candidate) => (
+    `${candidate.category}:${candidate.fact.trim().toLowerCase()}`
+  ));
+  value.memoryCandidates.forEach((candidate, index) => {
+    addDuplicateErrors(
+      errors,
+      `/memoryCandidates/${index}/sourceMessageIds`,
+      candidate.sourceMessageIds
+    );
+    if (candidate.validFrom !== value.day || candidate.validTo !== null) {
+      errors.push(semanticError(
+        `/memoryCandidates/${index}`,
+        "new memory candidates must start on the result day without an end date"
+      ));
+    }
+  });
+  for (const candidateKey of duplicateValues(candidateKeys)) {
+    errors.push(semanticError(
+      "/memoryCandidates",
+      "memory candidate category and fact must be unique",
+      { candidateKey }
+    ));
+  }
   addDuplicateErrors(errors, "/safety/reasonCodes", value.safety.reasonCodes);
   addDuplicateErrors(errors, "/safety/sourceMessageIds", value.safety.sourceMessageIds);
   addDuplicateErrors(errors, "/diary/tags", value.diary.tags);
@@ -149,6 +175,10 @@ export function validateMood(value) {
 
 export function validateHealth(value) {
   return runValidator(validators.health, value);
+}
+
+export function validateMemoryCandidate(value) {
+  return runValidator(validators.memoryCandidate, value);
 }
 
 export function validateDiary(value) {

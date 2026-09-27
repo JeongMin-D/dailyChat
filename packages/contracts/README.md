@@ -7,6 +7,7 @@ Bot, Worker, Dashboard가 공유하는 JSON Schema와 API 계약을 둡니다.
 - `eventSchema`: 사건 유형, 요약, 확신도, 복수 원문 근거
 - `moodSchema`: 1~5 점수, 표현 라벨, inferred/checkin 구분, 근거
 - `healthSchema`: 증상, nullable 심각도·시각·메모, 근거
+- `memoryCandidateSchema`: 장기 가치가 있는 사실, 분류·확신도·유효기간·직접 원문 근거
 - `diarySchema`: 순서가 있는 근거 block과 직접 원문/event 참조
 - `safetySchema`: `none | concern | urgent`와 제한된 사유 코드
 - `nightlyExtractionSchema`: 위 계약을 묶은 Groq strict Structured Outputs 응답

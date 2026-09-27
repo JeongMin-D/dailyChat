@@ -84,3 +84,13 @@ outbox에는 사용자 원문이나 일기 본문을 복제하지 않습니다. 
 - 모든 테이블 RLS와 server-only 명시 권한
 
 후보 판단, 사용자 확인, 활성 기억 버전과 투영은 후속 E02~E07에서 구현한다. 부모당 최소 한 개 근거와 job snapshot 소속은 저장 트랜잭션에서 강제한다.
+
+`20260927161547_m3_memory_candidate_persistence.sql`은 E02 후보 추출 결과를 기존 nightly 결과와 같은 트랜잭션에 저장한다.
+
+- `schemaVersion 1.1.0`, `nightly-v2`, `nightly-pipeline-v2`
+- 후보마다 직접 user message 근거 1개 이상 필수
+- source message의 처리일·role을 DB 경계에서 재검증
+- 새 후보의 `valid_from`은 job day, `valid_to`는 null로 고정
+- 일기·파생 데이터·기억 후보 중 하나라도 실패하면 전체 rollback
+
+event-only 후보 저장은 검증 규칙을 추가하는 후속 단계까지 사용하지 않는다.

@@ -2,6 +2,16 @@ const eventTypes = ["work", "social", "health", "family", "hobby", "other"];
 const moodSources = ["inferred", "checkin"];
 const safetyLevels = ["none", "concern", "urgent"];
 const safetyReasonCodes = ["self_harm", "suicide", "acute_distress"];
+const memoryCategories = [
+  "profile",
+  "preference",
+  "relationship",
+  "project",
+  "decision",
+  "routine",
+  "health",
+  "other"
+];
 
 const sourceRelation = (table, parentColumn) => ({
   storage: "relation",
@@ -15,7 +25,7 @@ const sourceRelation = (table, parentColumn) => ({
 });
 
 export const nightlyDatabaseContract = {
-  version: "1.0.0",
+  version: "1.1.0",
   access: {
     schema: "public",
     rlsRequired: true,
@@ -29,7 +39,8 @@ export const nightlyDatabaseContract = {
     eventTypes,
     moodSources,
     safetyLevels,
-    safetyReasonCodes
+    safetyReasonCodes,
+    memoryCategories
   },
   mappings: {
     topLevel: {
@@ -39,7 +50,7 @@ export const nightlyDatabaseContract = {
         column: "schema_version",
         sqlType: "text",
         nullable: false,
-        allowed: ["1.0.0"]
+        allowed: ["1.1.0"]
       },
       day: {
         storage: "column",
@@ -51,6 +62,7 @@ export const nightlyDatabaseContract = {
       events: { storage: "collection", table: "events" },
       moods: { storage: "collection", table: "mood_entries" },
       healthEntries: { storage: "collection", table: "health_entries" },
+      memoryCandidates: { storage: "collection", table: "memory_candidates" },
       safety: { storage: "object", table: "safety_assessments" },
       diary: { storage: "object", table: "diaries" }
     },
@@ -201,6 +213,52 @@ export const nightlyDatabaseContract = {
         maximum: 1
       },
       sourceMessageIds: sourceRelation("health_message_sources", "health_entry_id")
+    },
+    memoryCandidate: {
+      category: {
+        storage: "column",
+        table: "memory_candidates",
+        column: "category",
+        sqlType: "text",
+        nullable: false,
+        allowed: memoryCategories
+      },
+      fact: {
+        storage: "column",
+        table: "memory_candidates",
+        column: "fact",
+        sqlType: "text",
+        nullable: false,
+        minLength: 1,
+        maxLength: 500
+      },
+      confidence: {
+        storage: "column",
+        table: "memory_candidates",
+        column: "confidence",
+        sqlType: "numeric(5,4)",
+        nullable: false,
+        minimum: 0,
+        maximum: 1
+      },
+      validFrom: {
+        storage: "column",
+        table: "memory_candidates",
+        column: "valid_from",
+        sqlType: "date",
+        nullable: false
+      },
+      validTo: {
+        storage: "column",
+        table: "memory_candidates",
+        column: "valid_to",
+        sqlType: "date",
+        nullable: true
+      },
+      sourceMessageIds: sourceRelation(
+        "memory_candidate_message_sources",
+        "memory_candidate_id"
+      )
     },
     safety: {
       level: {

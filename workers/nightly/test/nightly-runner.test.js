@@ -11,11 +11,12 @@ const NOTIFICATION_ID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
 
 function extractionOutput() {
   return {
-    schemaVersion: "1.0.0",
+    schemaVersion: "1.1.0",
     day: DAY,
     events: [],
     moods: [],
     healthEntries: [],
+    memoryCandidates: [],
     safety: {
       level: "none",
       reasonCodes: [],
@@ -53,7 +54,7 @@ function createDependencies({ prepareAction = "created", messages } = {}) {
       },
       extractor: {
         model: "openai/gpt-oss-120b",
-        promptVersion: "nightly-v1",
+        promptVersion: "nightly-v2",
         async extract({ snapshot }) {
           calls.push(["extract", snapshot]);
           return { status: "completed", attempts: 1, output };
@@ -113,8 +114,8 @@ test("입력부터 Telegram 전송까지 순서대로 한 번 실행한다", asy
     "enqueue",
     "deliver"
   ]);
-  assert.equal(calls[1][1].pipelineVersion, "nightly-pipeline-v1");
-  assert.equal(calls[1][1].schemaVersion, "1.0.0");
+  assert.equal(calls[1][1].pipelineVersion, "nightly-pipeline-v2");
+  assert.equal(calls[1][1].schemaVersion, "1.1.0");
   assert.deepEqual(calls[4][1].output, extractionOutput());
 });
 

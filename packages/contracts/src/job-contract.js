@@ -73,7 +73,7 @@ export const jobRunReproducibilityContract = {
     pattern: "^[0-9a-f]{64}$"
   },
   provider: "groq",
-  schemaVersions: ["1.0.0"]
+  schemaVersions: ["1.1.0"]
 };
 
 export const nightlyInputSnapshotContract = {
