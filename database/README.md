@@ -112,3 +112,12 @@ event-only 후보 저장은 검증 규칙을 추가하는 후속 단계까지 �
 - 동일 사실 자동 rejected, 변경 사실은 다음 version pending
 - Telegram 확인 시 기존 confirmed를 superseded로 바꾸고 새 버전을 confirmed로 전환
 - rollback 검증과 service-role 전용 RPC 권한 유지
+
+`20260927215433_m3_memory_forget.sql`은 E06 사용자 요청 비활성화를 추가한다.
+
+- `forgotten` 상태와 `forgotten_at`으로 원문 근거·변경 이력을 보존하는 논리 삭제
+- 설정된 Telegram user/chat ID를 재검증하는 멱등 `forget_memory_candidate` RPC
+- 비활성화 즉시 활성 기억 조회와 대화 Context에서 제외
+- `SECURITY INVOKER`, anon/authenticated 실행 차단, service-role 전용 실행
+
+원문까지 파기하는 개인정보 완전 삭제는 보존·백업 복구 정책과 함께 별도 작업으로 처리한다.

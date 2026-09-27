@@ -36,7 +36,7 @@ export function parseTextUpdate(update) {
 export function parseMemoryCallbackUpdate(update) {
   const query = update?.callback_query;
   const match = typeof query?.data === "string"
-    ? /^memory:(confirm|reject):([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.exec(query.data)
+    ? /^memory:(confirm|reject|forget):([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.exec(query.data)
     : null;
   if (
     !Number.isSafeInteger(update?.update_id)
@@ -57,6 +57,10 @@ export function parseMemoryCallbackUpdate(update) {
     decision: match[1],
     memoryCandidateId: match[2].toLowerCase()
   };
+}
+
+export function isForgetMemoryCommand(text) {
+  return /^(?:잊어줘|\/forget(?:@[a-z0-9_]+)?)$/i.test(text.trim());
 }
 
 export class TelegramApiError extends Error {

@@ -2,6 +2,7 @@ import { getLocalDay } from "../../../packages/core/src/time/local-day.js";
 import { buildConversationMessages } from "./prompt-context.js";
 import {
   isValidWebhookSecret,
+  isForgetMemoryCommand,
   parseMemoryCallbackUpdate,
   parseTextUpdate
 } from "./telegram.js";
@@ -51,15 +52,23 @@ export function createConversationService({
 
       try {
         if (callback) {
-          const decision = await store.decideMemoryCandidate({
-            memoryCandidateId: callback.memoryCandidateId,
-            decision: callback.decision,
-            userId: callback.userId,
-            chatId: callback.chatId
-          });
+          const decision = callback.decision === "forget"
+            ? await store.forgetMemoryCandidate({
+                memoryCandidateId: callback.memoryCandidateId,
+                userId: callback.userId,
+                chatId: callback.chatId
+              })
+            : await store.decideMemoryCandidate({
+                memoryCandidateId: callback.memoryCandidateId,
+                decision: callback.decision,
+                userId: callback.userId,
+                chatId: callback.chatId
+              });
           const responseText = decision?.action === "conflict"
-            ? "이미 다른 선택으로 처리됐어요."
-            : callback.decision === "confirm" ? "기억으로 저장했어요." : "기억하지 않을게요.";
+            ? "이미 다른 상태로 처리됐어요."
+            : callback.decision === "forget"
+              ? "기억에서 지웠어요."
+              : callback.decision === "confirm" ? "기억으로 저장했어요." : "기억하지 않을게요.";
           await telegram.answerCallbackQuery(callback.callbackQueryId, responseText);
           try {
             await telegram.removeInlineKeyboard(callback.chatId, callback.messageId);
@@ -80,6 +89,34 @@ export function createConversationService({
         });
 
         await store.saveUserMessage({ ...message, day });
+
+        if (isForgetMemoryCommand(message.text)) {
+          const memories = await store.listActiveMemories({ day, limit: 20 });
+          const reply = memories.length === 0
+            ? "현재 기억하고 있는 내용이 없어요."
+            : "잊고 싶은 기억을 선택해 주세요.";
+          const replyTime = new Date();
+          await store.saveAssistantReply({
+            updateId: message.updateId,
+            chatId: message.chatId,
+            text: reply,
+            sentAt: replyTime,
+            day: getLocalDay(replyTime, {
+              timeZone: config.timeZone,
+              boundaryHour: config.dayBoundaryHour
+            })
+          });
+          await telegram.sendText(message.chatId, reply, memories.length === 0 ? {} : {
+            replyMarkup: {
+              inline_keyboard: memories.map((memory) => [{
+                text: memory.fact.length > 44 ? `${memory.fact.slice(0, 43)}…` : memory.fact,
+                callback_data: `memory:forget:${memory.id}`
+              }])
+            }
+          });
+          await store.completeUpdate(message.updateId);
+          return { status: 200, result: "completed" };
+        }
 
         let reply = await store.findAssistantReply(message.updateId);
         if (!reply) {

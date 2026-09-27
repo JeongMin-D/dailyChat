@@ -53,6 +53,10 @@ function setup({
     async decideMemoryCandidate(value) {
       calls.push(["decide-memory", value]);
       return { action: "updated", status: value.decision === "confirm" ? "confirmed" : "rejected" };
+    },
+    async forgetMemoryCandidate(value) {
+      calls.push(["forget-memory", value]);
+      return { action: "updated", status: "forgotten" };
     }
   };
   const llm = {
@@ -63,8 +67,10 @@ function setup({
     }
   };
   const telegram = {
-    async sendText(chatId, text) {
-      calls.push(["send", chatId, text]);
+    async sendText(chatId, text, options) {
+      calls.push(options === undefined
+        ? ["send", chatId, text]
+        : ["send", chatId, text, options]);
       if (sendError) throw sendError;
     },
     async removeInlineKeyboard(chatId, messageId) {
@@ -133,6 +139,48 @@ test("기억 확인 버튼은 LLM 없이 후보를 확정하고 버튼을 제거
   assert.deepEqual(result, { status: 200, result: "completed" });
   assert.deepEqual(calls.map(([name]) => name), [
     "claim", "decide-memory", "answer-callback", "remove-keyboard", "complete"
+  ]);
+  assert.equal(calls.some(([name]) => name === "llm"), false);
+});
+
+test("잊어줘 명령은 활성 기억을 선택 버튼으로 보여주고 LLM을 호출하지 않는다", async () => {
+  const memories = [{
+    id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    category: "preference",
+    fact: "차를 좋아한다"
+  }];
+  const { service, calls } = setup({ memories });
+
+  await service.handle({ secret: "test-secret", update: update({ text: "잊어줘" }) });
+
+  assert.equal(calls.some(([name]) => name === "llm"), false);
+  assert.deepEqual(calls.find(([name]) => name === "list-memories")[1].limit, 20);
+  assert.equal(calls.find(([name]) => name === "send")[2], "잊고 싶은 기억을 선택해 주세요.");
+  assert.equal(
+    calls.find(([name]) => name === "send")[3].replyMarkup.inline_keyboard[0][0].callback_data,
+    "memory:forget:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+  );
+});
+
+test("기억 삭제 버튼은 LLM 없이 선택한 기억만 비활성화한다", async () => {
+  const { service, calls } = setup();
+
+  const result = await service.handle({
+    secret: "test-secret",
+    update: {
+      update_id: 13,
+      callback_query: {
+        id: "callback-3",
+        from: { id: 100 },
+        message: { message_id: 32, chat: { id: 200 } },
+        data: "memory:forget:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+      }
+    }
+  });
+
+  assert.deepEqual(result, { status: 200, result: "completed" });
+  assert.deepEqual(calls.map(([name]) => name), [
+    "claim", "forget-memory", "answer-callback", "remove-keyboard", "complete"
   ]);
   assert.equal(calls.some(([name]) => name === "llm"), false);
 });

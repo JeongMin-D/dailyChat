@@ -24,3 +24,5 @@ Webhook은 `X-Telegram-Bot-Api-Secret-Token`을 검증하고 허용된 user/chat
 Groq와 Telegram의 429·5xx·네트워크 오류·timeout은 지수 backoff와 jitter로 제한 재시도합니다. `Retry-After` 헤더와 Telegram `parameters.retry_after`를 우선하되 최대 지연을 넘기지 않습니다. 인증·권한 등 다른 4xx는 재시도하지 않으며, 각 재시도는 `upstream_retry_scheduled` 경고 로그에 upstream, attempt, delay, status 또는 오류 이름을 남깁니다.
 
 기본 Context 제한은 최신 활성 기억 8개와 최근 12개 메시지가 공유하는 총 6,000자입니다. 메시지 수와 총 문자 수는 각각 `CONVERSATION_HISTORY_LIMIT`, `CONVERSATION_CONTEXT_CHARS`로 조정할 수 있습니다.
+
+`잊어줘` 또는 `/forget`을 보내면 활성 기억을 최대 20개까지 선택 버튼으로 표시합니다. 선택한 기억은 `forgotten` 상태로 논리 삭제되어 이후 대화 Context에서 즉시 제외되며, 원문 근거와 변경 이력은 감사·복구를 위해 유지합니다.

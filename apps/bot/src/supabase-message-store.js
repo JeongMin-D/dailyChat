@@ -54,6 +54,23 @@ export class SupabaseMessageStore {
     return result;
   }
 
+  async forgetMemoryCandidate({ memoryCandidateId, userId, chatId }) {
+    const result = await this.request("/rpc/forget_memory_candidate", {
+      method: "POST",
+      body: JSON.stringify({
+        p_memory_candidate_id: memoryCandidateId,
+        p_telegram_user_id: Number(userId),
+        p_telegram_chat_id: Number(chatId)
+      })
+    });
+    if (
+      !["updated", "noop", "conflict"].includes(result?.action)
+      || !["pending", "confirmed", "rejected", "superseded", "forgotten"]
+        .includes(result?.status)
+    ) throw new Error("Supabase memory forget returned an invalid response");
+    return result;
+  }
+
   async saveUserMessage(message) {
     await this.request("/messages", {
       method: "POST",
@@ -105,7 +122,7 @@ export class SupabaseMessageStore {
       status: "eq.confirmed",
       valid_from: `lte.${day}`,
       or: `(valid_to.is.null,valid_to.gte.${day})`,
-      select: "category,fact",
+      select: "id,category,fact",
       order: "updated_at.desc",
       limit: String(limit)
     });

@@ -107,7 +107,11 @@ test("확정되고 처리일에 유효한 기억만 최신순으로 조회한다
     timeoutMs: 1000,
     fetchImpl: async (url) => {
       requestUrl = new URL(url);
-      return response([{ category: "preference", fact: "차를 좋아한다" }]);
+      return response([{
+        id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        category: "preference",
+        fact: "차를 좋아한다"
+      }]);
     }
   });
 
@@ -118,7 +122,34 @@ test("확정되고 처리일에 유효한 기억만 최신순으로 조회한다
   assert.equal(requestUrl.searchParams.get("or"), "(valid_to.is.null,valid_to.gte.2026-09-28)");
   assert.equal(requestUrl.searchParams.get("order"), "updated_at.desc");
   assert.equal(requestUrl.searchParams.get("limit"), "8");
-  assert.deepEqual(memories, [{ category: "preference", fact: "차를 좋아한다" }]);
+  assert.equal(requestUrl.searchParams.get("select"), "id,category,fact");
+  assert.equal(memories[0].fact, "차를 좋아한다");
+});
+
+test("기억 삭제 RPC에 후보와 검증된 Telegram identity를 전달한다", async () => {
+  let request;
+  const store = new SupabaseMessageStore({
+    url: "https://example.supabase.co",
+    serviceRoleKey: "sb_secret_test",
+    timeoutMs: 1000,
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return response({ action: "updated", status: "forgotten" });
+    }
+  });
+
+  await store.forgetMemoryCandidate({
+    memoryCandidateId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    userId: "100",
+    chatId: "200"
+  });
+
+  assert.match(request.url, /rpc\/forget_memory_candidate$/);
+  assert.deepEqual(JSON.parse(request.options.body), {
+    p_memory_candidate_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    p_telegram_user_id: 100,
+    p_telegram_chat_id: 200
+  });
 });
 
 test("기억 결정 RPC에 후보와 검증된 Telegram identity를 전달한다", async () => {
