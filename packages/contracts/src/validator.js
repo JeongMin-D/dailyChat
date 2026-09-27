@@ -86,7 +86,7 @@ function semanticErrors(value, allowedMessageIds, expectedDay) {
     addDuplicateErrors(errors, `/healthEntries/${index}/sourceMessageIds`, entry.sourceMessageIds);
   });
   const candidateKeys = value.memoryCandidates.map((candidate) => (
-    `${candidate.category}:${candidate.fact.trim().toLowerCase()}`
+    `${candidate.category}:${candidate.memoryKey}`
   ));
   value.memoryCandidates.forEach((candidate, index) => {
     addDuplicateErrors(
@@ -104,7 +104,7 @@ function semanticErrors(value, allowedMessageIds, expectedDay) {
   for (const candidateKey of duplicateValues(candidateKeys)) {
     errors.push(semanticError(
       "/memoryCandidates",
-      "memory candidate category and fact must be unique",
+      "memory candidate category and memoryKey must be unique",
       { candidateKey }
     ));
   }

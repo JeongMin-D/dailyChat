@@ -83,7 +83,7 @@ outbox에는 사용자 원문이나 일기 본문을 복제하지 않습니다. 
 - 후보 삭제 시 연결 행만 제거하는 `CASCADE`
 - 모든 테이블 RLS와 server-only 명시 권한
 
-후보 판단, 사용자 확인, 활성 기억 버전과 투영은 후속 E02~E07에서 구현한다. 부모당 최소 한 개 근거와 job snapshot 소속은 저장 트랜잭션에서 강제한다.
+후보 판단·사용자 확인·활성 기억 버전은 E02~E05에서 구현했다. 투영은 E07 범위다. 부모당 최소 한 개 근거와 job snapshot 소속은 저장 트랜잭션에서 강제한다.
 
 `20260927161547_m3_memory_candidate_persistence.sql`은 E02 후보 추출 결과를 기존 nightly 결과와 같은 트랜잭션에 저장한다.
 
@@ -103,4 +103,12 @@ event-only 후보 저장은 검증 규칙을 추가하는 후속 단계까지 �
 - 설정된 Telegram user/chat ID를 재검증하는 멱등 확인·거절 RPC
 - RLS, `SECURITY INVOKER`, service-role 전용 접근
 
-긴급 safety 알림에서는 기억 후보 확인을 보내지 않는다. 반대 결정으로의 수정과 상충 이력은 E05에서 처리한다.
+긴급 safety 알림에서는 기억 후보 확인을 보내지 않는다.
+
+`20260927213724_m3_memory_versioning.sql`은 E05 갱신과 상충 처리를 추가한다.
+
+- schema `1.2.0`, prompt `nightly-v3`, pipeline `nightly-pipeline-v3`
+- category와 안정 `memory_key`별 advisory transaction lock
+- 동일 사실 자동 rejected, 변경 사실은 다음 version pending
+- Telegram 확인 시 기존 confirmed를 superseded로 바꾸고 새 버전을 confirmed로 전환
+- rollback 검증과 service-role 전용 RPC 권한 유지

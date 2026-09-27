@@ -17,7 +17,7 @@ const MESSAGE_2 = "22222222-2222-4222-8222-222222222222";
 
 function validResult() {
   return {
-    schemaVersion: "1.1.0",
+    schemaVersion: "1.2.0",
     day: "2026-09-24",
     events: [{
       eventRef: "event-1",
@@ -45,6 +45,7 @@ function validResult() {
       sourceMessageIds: [MESSAGE_1]
     }],
     memoryCandidates: [{
+      memoryKey: "data_contract_project",
       category: "project",
       fact: "데이터 계약 프로젝트를 장기간 진행하고 있다.",
       confidence: 0.9,
@@ -173,7 +174,7 @@ test("Groq 미지원 uniqueItems 대신 의미 검증으로 중복 배열 값을
   assert.ok(result.errors.some((error) => error.params.duplicate === MESSAGE_1));
 });
 
-test("기억 후보는 당일 시작·종료일 없음·중복 없는 사실만 허용한다", () => {
+test("기억 후보는 당일 시작·종료일 없음·중복 없는 기억 키만 허용한다", () => {
   const invalidRange = validResult();
   invalidRange.memoryCandidates[0].validFrom = "2026-09-23";
   assert.equal(validateNightlyExtraction(invalidRange).valid, false);
@@ -186,7 +187,7 @@ test("기억 후보는 당일 시작·종료일 없음·중복 없는 사실만 
   const result = validateNightlyExtraction(duplicate);
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => (
-    error.message === "memory candidate category and fact must be unique"
+    error.message === "memory candidate category and memoryKey must be unique"
   )));
 });
 

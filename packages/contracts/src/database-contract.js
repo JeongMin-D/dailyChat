@@ -25,7 +25,7 @@ const sourceRelation = (table, parentColumn) => ({
 });
 
 export const nightlyDatabaseContract = {
-  version: "1.1.0",
+  version: "1.2.0",
   access: {
     schema: "public",
     rlsRequired: true,
@@ -50,7 +50,7 @@ export const nightlyDatabaseContract = {
         column: "schema_version",
         sqlType: "text",
         nullable: false,
-        allowed: ["1.1.0"]
+        allowed: ["1.2.0"]
       },
       day: {
         storage: "column",
@@ -215,6 +215,13 @@ export const nightlyDatabaseContract = {
       sourceMessageIds: sourceRelation("health_message_sources", "health_entry_id")
     },
     memoryCandidate: {
+      memoryKey: {
+        storage: "column",
+        table: "memory_candidates",
+        column: "memory_key",
+        sqlType: "text",
+        nullable: false
+      },
       category: {
         storage: "column",
         table: "memory_candidates",

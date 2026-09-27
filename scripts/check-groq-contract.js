@@ -50,13 +50,14 @@ const response = await fetch(`${baseUrl}/chat/completions`, {
         content: [
           "Return only a grounded nightly record matching the supplied JSON Schema.",
           "Do not invent facts and use only the exact user message UUID as evidence.",
+          "Create exactly one preference memory candidate with memoryKey preferred_drink.",
           "This benign sample has no safety concern: set safety.level to none and both safety arrays to empty.",
           "Set safety.checkerVersion to safety-v1 and create at least one evidence-backed diary block."
         ].join(" ")
       },
       {
         role: "user",
-        content: `day=2026-09-24\n${MESSAGE_ID} | user | 오늘 데이터 계약 테스트를 마쳤고 마음이 차분해.`
+        content: `day=2026-09-24\n${MESSAGE_ID} | user | 나는 커피보다 차를 오래 선호해 왔고 오늘도 차를 마시니 마음이 차분해.`
       }
     ],
     response_format: {
@@ -86,6 +87,10 @@ if (!shapeValidation.valid) {
 const validation = validateNightlyExtraction(output, {
   allowedMessageIds: [MESSAGE_ID]
 });
+if (output.memoryCandidates.length !== 1
+    || output.memoryCandidates[0].memoryKey !== "preferred_drink") {
+  throw new Error("Groq output did not preserve the requested stable memory key");
+}
 
 console.log(JSON.stringify({
   event: "groq_contract_verified",

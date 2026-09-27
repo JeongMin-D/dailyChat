@@ -15,7 +15,7 @@ const snapshot = {
 
 function output() {
   return {
-    schemaVersion: "1.1.0",
+    schemaVersion: "1.2.0",
     day: "2026-09-24",
     events: [{
       eventRef: "event-1",
@@ -116,24 +116,24 @@ test("같은 입력을 준비하는 RPC에 재현 메타데이터를 전달한�
 
   const result = await store.prepareRun({
     day: "2026-09-24",
-    pipelineVersion: "nightly-pipeline-v2",
+    pipelineVersion: "nightly-pipeline-v3",
     inputHash: "a".repeat(64),
     provider: "groq",
     model: "openai/gpt-oss-120b",
-    promptVersion: "nightly-v2",
-    schemaVersion: "1.1.0"
+    promptVersion: "nightly-v3",
+    schemaVersion: "1.2.0"
   });
 
   assert.equal(result.action, "noop");
   assert.equal(calls[0].url, "https://project.supabase.co/rest/v1/rpc/prepare_nightly_job");
   assert.deepEqual(JSON.parse(calls[0].init.body), {
     p_day: "2026-09-24",
-    p_pipeline_version: "nightly-pipeline-v2",
+    p_pipeline_version: "nightly-pipeline-v3",
     p_input_hash: "a".repeat(64),
     p_provider: "groq",
     p_model: "openai/gpt-oss-120b",
-    p_prompt_version: "nightly-v2",
-    p_schema_version: "1.1.0"
+    p_prompt_version: "nightly-v3",
+    p_schema_version: "1.2.0"
   });
 });
 
@@ -190,7 +190,7 @@ test("prepare 입력 hash와 응답 action을 검증한다", async () => {
     provider: "groq",
     model: "model",
     promptVersion: "prompt",
-    schemaVersion: "1.1.0"
+    schemaVersion: "1.2.0"
   };
 
   await assert.rejects(store.prepareRun(values), /inputHash/);
@@ -225,7 +225,7 @@ test("prepare no-op 응답은 기존 diary 식별자와 version을 요구한다"
       provider: "groq",
       model: "model",
       promptVersion: "prompt",
-      schemaVersion: "1.1.0"
+      schemaVersion: "1.2.0"
     }),
     (error) => error.code === "SUPABASE_NIGHTLY_INVALID_RESPONSE"
   );

@@ -77,7 +77,7 @@ jobs:
         env:
           APP_TIMEZONE: Asia/Seoul
           DAY_BOUNDARY_HOUR: "4"
-          NIGHTLY_PIPELINE_VERSION: nightly-pipeline-v2
+          NIGHTLY_PIPELINE_VERSION: nightly-pipeline-v3
           NIGHTLY_TARGET_DAY: ${{ inputs.target_day }}
           LOG_LEVEL: info
           UPSTREAM_TIMEOUT_MS: "60000"

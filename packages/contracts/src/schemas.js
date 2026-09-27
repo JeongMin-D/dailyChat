@@ -87,6 +87,12 @@ const memoryCandidateDefinition = {
   type: "object",
   additionalProperties: false,
   properties: {
+    memoryKey: {
+      type: "string",
+      pattern: "^[a-z0-9]+([_-][a-z0-9]+)*$",
+      minLength: 1,
+      maxLength: 120
+    },
     category: {
       type: "string",
       enum: [
@@ -107,6 +113,7 @@ const memoryCandidateDefinition = {
     sourceMessageIds
   },
   required: [
+    "memoryKey",
     "category",
     "fact",
     "confidence",
@@ -219,7 +226,7 @@ export const nightlyExtractionSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    schemaVersion: { type: "string", enum: ["1.1.0"] },
+    schemaVersion: { type: "string", enum: ["1.2.0"] },
     day: { type: "string", pattern: LOCAL_DAY_PATTERN },
     events: {
       type: "array",
