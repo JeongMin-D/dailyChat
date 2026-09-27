@@ -38,8 +38,9 @@ updated: 2026-09-27
 - 완료: Dashboard 인증 최소 길이 16자 정책의 구성·회귀 테스트 동기화
 - 완료: Dashboard 반응형 개선 Render 배포와 공개 health·인증 보호 확인
 - 완료: Render GitHub App에 `dailyChat` 저장소 권한 추가, `2100ad5` push의 `new_commit` 자동 배포와 health 200 검증
+- 완료: Dashboard 운영 인증값 안전 교체·로컬/Render 동기화와 미인증 401·인증 200·날짜 선택·반응형 CSS 검증
 - 완료: GitHub Actions 예약 실행 2회 성공과 빈 입력 no-op 확인
-- 다음 작업: [[11 실행 체크리스트]] P0 Dashboard 운영 인증 200 확인과 배포 롤백 검증
+- 다음 작업: [[11 실행 체크리스트]] P0 이전 정상 deploy 롤백 검증
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
