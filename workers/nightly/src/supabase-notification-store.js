@@ -91,6 +91,88 @@ export class SupabaseNotificationOutboxStore {
     return result;
   }
 
+  async enqueueMemoryConfirmations(jobRunId) {
+    requireUuid("jobRunId", jobRunId);
+    const result = await this.requestRpc("enqueue_memory_confirmations", {
+      p_job_run_id: jobRunId
+    });
+    if (!Array.isArray(result) || result.some((item) => (
+      !UUID_PATTERN.test(item?.notificationId ?? "")
+      || !UUID_PATTERN.test(item?.memoryCandidateId ?? "")
+      || !OUTBOX_STATUSES.has(item?.status)
+    ))) {
+      throw codedError(
+        "SUPABASE_NOTIFICATION_INVALID_RESPONSE",
+        "Supabase enqueue_memory_confirmations returned an invalid response"
+      );
+    }
+    return result;
+  }
+
+  async claimMemoryConfirmation(notificationId) {
+    requireUuid("notificationId", notificationId);
+    const result = await this.requestRpc("claim_memory_confirmation", {
+      p_notification_id: notificationId
+    });
+    if (result === null) return null;
+    if (
+      result?.notificationId !== notificationId
+      || !UUID_PATTERN.test(result?.memoryCandidateId ?? "")
+      || !/^-?\d+$/.test(result?.recipientChatId ?? "")
+      || !Number.isInteger(result?.attempt)
+      || result.attempt < 1
+      || typeof result?.category !== "string"
+      || typeof result?.fact !== "string"
+      || result.fact.length < 1
+      || result.fact.length > 500
+    ) {
+      throw codedError(
+        "SUPABASE_NOTIFICATION_INVALID_RESPONSE",
+        "Supabase claim_memory_confirmation returned an invalid response"
+      );
+    }
+    return result;
+  }
+
+  async markMemoryConfirmationSent({ notificationId, providerMessageId }) {
+    requireUuid("notificationId", notificationId);
+    if (typeof providerMessageId !== "string" || providerMessageId.length < 1
+      || providerMessageId.length > 100) {
+      throw new TypeError("providerMessageId must contain 1 to 100 characters");
+    }
+    const result = await this.requestRpc("complete_memory_confirmation", {
+      p_notification_id: notificationId,
+      p_provider_message_id: providerMessageId
+    });
+    if (result !== true) {
+      throw codedError("SUPABASE_NOTIFICATION_STATE_CONFLICT", "Notification state conflict");
+    }
+  }
+
+  async markMemoryConfirmationFailed({
+    notificationId,
+    errorCode,
+    retryable,
+    retryAfterSeconds = 0
+  }) {
+    requireUuid("notificationId", notificationId);
+    if (!ERROR_CODE_PATTERN.test(errorCode)) throw new TypeError("errorCode is invalid");
+    if (typeof retryable !== "boolean") throw new TypeError("retryable must be boolean");
+    if (!Number.isInteger(retryAfterSeconds) || retryAfterSeconds < 0
+      || retryAfterSeconds > MAX_RETRY_AFTER_SECONDS) {
+      throw new RangeError("retryAfterSeconds is invalid");
+    }
+    const result = await this.requestRpc("fail_memory_confirmation", {
+      p_notification_id: notificationId,
+      p_error_code: errorCode,
+      p_retryable: retryable,
+      p_retry_after_seconds: retryAfterSeconds
+    });
+    if (result !== true) {
+      throw codedError("SUPABASE_NOTIFICATION_STATE_CONFLICT", "Notification state conflict");
+    }
+  }
+
   async claim(notificationId) {
     requireUuid("notificationId", notificationId);
     const result = await this.requestRpc("claim_diary_notification", {

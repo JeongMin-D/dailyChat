@@ -1,6 +1,10 @@
 import { getLocalDay } from "../../../packages/core/src/time/local-day.js";
 import { buildConversationMessages } from "./prompt-context.js";
-import { isValidWebhookSecret, parseTextUpdate } from "./telegram.js";
+import {
+  isValidWebhookSecret,
+  parseMemoryCallbackUpdate,
+  parseTextUpdate
+} from "./telegram.js";
 
 function errorCode(error) {
   if (error?.name === "TimeoutError") return "UPSTREAM_TIMEOUT";
@@ -31,7 +35,8 @@ export function createConversationService({
         return { status: 401, result: "unauthorized" };
       }
 
-      const message = parseTextUpdate(update);
+      const callback = parseMemoryCallbackUpdate(update);
+      const message = callback ?? parseTextUpdate(update);
       if (!message) return { status: 200, result: "ignored" };
 
       if (
@@ -45,6 +50,30 @@ export function createConversationService({
       if (!claimed) return { status: 200, result: "duplicate" };
 
       try {
+        if (callback) {
+          const decision = await store.decideMemoryCandidate({
+            memoryCandidateId: callback.memoryCandidateId,
+            decision: callback.decision,
+            userId: callback.userId,
+            chatId: callback.chatId
+          });
+          const responseText = decision?.action === "conflict"
+            ? "이미 다른 선택으로 처리됐어요."
+            : callback.decision === "confirm" ? "기억으로 저장했어요." : "기억하지 않을게요.";
+          await telegram.answerCallbackQuery(callback.callbackQueryId, responseText);
+          try {
+            await telegram.removeInlineKeyboard(callback.chatId, callback.messageId);
+          } catch (error) {
+            logger.error("memory_callback_keyboard_cleanup_failed", {
+              requestId,
+              updateId: callback.updateId,
+              errorName: error?.name || "Error"
+            });
+          }
+          await store.completeUpdate(callback.updateId);
+          return { status: 200, result: decision?.action === "conflict" ? "conflict" : "completed" };
+        }
+
         const day = getLocalDay(message.sentAt, {
           timeZone: config.timeZone,
           boundaryHour: config.dayBoundaryHour

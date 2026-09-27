@@ -98,3 +98,29 @@ test("최근 대화를 조회하고 시간 순서로 반환한다", async () => 
     "두 번째 답변"
   ]);
 });
+
+test("기억 결정 RPC에 후보와 검증된 Telegram identity를 전달한다", async () => {
+  let request;
+  const store = new SupabaseMessageStore({
+    url: "https://example.supabase.co",
+    serviceRoleKey: "sb_secret_test",
+    timeoutMs: 1000,
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return response({ action: "updated", status: "confirmed" });
+    }
+  });
+  await store.decideMemoryCandidate({
+    memoryCandidateId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    decision: "confirm",
+    userId: "100",
+    chatId: "200"
+  });
+  assert.match(request.url, /rpc\/decide_memory_candidate$/);
+  assert.deepEqual(JSON.parse(request.options.body), {
+    p_memory_candidate_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    p_decision: "confirm",
+    p_telegram_user_id: 100,
+    p_telegram_chat_id: 200
+  });
+});

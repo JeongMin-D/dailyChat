@@ -31,7 +31,14 @@ function update(overrides = {}) {
   };
 }
 
-function setup({ claimed = true, existingReply = null, history = [], llmError, sendError } = {}) {
+function setup({
+  claimed = true,
+  existingReply = null,
+  history = [],
+  llmError,
+  sendError,
+  keyboardError
+} = {}) {
   const calls = [];
   const store = {
     async claimUpdate(id) { calls.push(["claim", id]); return claimed; },
@@ -40,7 +47,11 @@ function setup({ claimed = true, existingReply = null, history = [], llmError, s
     async listRecentMessages(input) { calls.push(["list-history", input]); return history; },
     async saveAssistantReply(message) { calls.push(["save-assistant", message]); },
     async completeUpdate(id) { calls.push(["complete", id]); },
-    async failUpdate(id, code) { calls.push(["fail", id, code]); }
+    async failUpdate(id, code) { calls.push(["fail", id, code]); },
+    async decideMemoryCandidate(value) {
+      calls.push(["decide-memory", value]);
+      return { action: "updated", status: value.decision === "confirm" ? "confirmed" : "rejected" };
+    }
   };
   const llm = {
     async generateReply(input) {
@@ -53,6 +64,13 @@ function setup({ claimed = true, existingReply = null, history = [], llmError, s
     async sendText(chatId, text) {
       calls.push(["send", chatId, text]);
       if (sendError) throw sendError;
+    },
+    async removeInlineKeyboard(chatId, messageId) {
+      calls.push(["remove-keyboard", chatId, messageId]);
+      if (keyboardError) throw keyboardError;
+    },
+    async answerCallbackQuery(callbackQueryId, text) {
+      calls.push(["answer-callback", callbackQueryId, text]);
     }
   };
   const logger = { error() {} };
@@ -74,6 +92,47 @@ test("잘못된 webhook secret은 어떤 작업도 시작하지 않는다", asyn
   const result = await service.handle({ secret: "wrong", update: update() });
   assert.deepEqual(result, { status: 401, result: "unauthorized" });
   assert.deepEqual(calls, []);
+});
+
+test("버튼 제거 실패는 이미 반영된 기억 결정을 되돌리지 않는다", async () => {
+  const { service, calls } = setup({ keyboardError: new Error("edit failed") });
+  const result = await service.handle({
+    secret: "test-secret",
+    update: {
+      update_id: 12,
+      callback_query: {
+        id: "callback-2",
+        from: { id: 100 },
+        message: { message_id: 31, chat: { id: 200 } },
+        data: "memory:reject:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+      }
+    }
+  });
+  assert.deepEqual(result, { status: 200, result: "completed" });
+  assert.equal(calls.at(-1)[0], "complete");
+  assert.equal(calls.some(([name]) => name === "fail"), false);
+});
+
+test("기억 확인 버튼은 LLM 없이 후보를 확정하고 버튼을 제거한다", async () => {
+  const { service, calls } = setup();
+  const result = await service.handle({
+    secret: "test-secret",
+    update: {
+      update_id: 11,
+      callback_query: {
+        id: "callback-1",
+        from: { id: 100 },
+        message: { message_id: 30, chat: { id: 200 } },
+        data: "memory:confirm:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+      }
+    }
+  });
+
+  assert.deepEqual(result, { status: 200, result: "completed" });
+  assert.deepEqual(calls.map(([name]) => name), [
+    "claim", "decide-memory", "answer-callback", "remove-keyboard", "complete"
+  ]);
+  assert.equal(calls.some(([name]) => name === "llm"), false);
 });
 
 test("허용되지 않은 사용자는 조용히 무시한다", async () => {

@@ -30,6 +30,7 @@ export class NightlyPipelineRunner {
     requireMethod(outputStore, "save");
     requireMethod(notificationStore, "enqueue");
     requireMethod(notificationDelivery, "deliver");
+    requireMethod(notificationDelivery, "deliverMemoryConfirmations");
     if (typeof pipelineVersion !== "string" || pipelineVersion.length === 0) {
       throw new TypeError("pipelineVersion is required");
     }
@@ -99,6 +100,9 @@ export class NightlyPipelineRunner {
         diaryId: prepared.diaryId
       });
       const delivery = await this.notificationDelivery.deliver(notification.notificationId);
+      const memoryConfirmations = notification.safetyLevel === "urgent"
+        ? []
+        : await this.notificationDelivery.deliverMemoryConfirmations(prepared.jobRunId);
       this.logger?.info("nightly_pipeline_replayed", {
         day: targetDay,
         jobRunId: prepared.jobRunId,
@@ -113,7 +117,8 @@ export class NightlyPipelineRunner {
         diaryId: prepared.diaryId,
         diaryVersion: prepared.diaryVersion,
         notificationId: notification.notificationId,
-        delivery
+        delivery,
+        memoryConfirmations
       };
     }
 
@@ -161,6 +166,9 @@ export class NightlyPipelineRunner {
       diaryId: saved.diaryId
     });
     const delivery = await this.notificationDelivery.deliver(notification.notificationId);
+    const memoryConfirmations = notification.safetyLevel === "urgent"
+      ? []
+      : await this.notificationDelivery.deliverMemoryConfirmations(prepared.jobRunId);
 
     this.logger?.info("nightly_pipeline_completed", {
       day: targetDay,
@@ -179,6 +187,7 @@ export class NightlyPipelineRunner {
       diaryVersion: saved.diaryVersion,
       notificationId: notification.notificationId,
       delivery,
+      memoryConfirmations,
       extractionAttempts: extraction.attempts
     };
   }

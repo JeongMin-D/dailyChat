@@ -94,3 +94,13 @@ outbox에는 사용자 원문이나 일기 본문을 복제하지 않습니다. 
 - 일기·파생 데이터·기억 후보 중 하나라도 실패하면 전체 rollback
 
 event-only 후보 저장은 검증 규칙을 추가하는 후속 단계까지 사용하지 않는다.
+
+`20260927163138_m3_memory_confirmation_flow.sql`은 E03 확인 흐름을 추가한다.
+
+- 비건강 후보 confidence 0.8 이상은 자동 확정
+- confidence 0.8 미만 또는 건강 후보는 사용자 확인 대기
+- 후보 ID만 보관하는 Telegram 확인 outbox와 bounded retry
+- 설정된 Telegram user/chat ID를 재검증하는 멱등 확인·거절 RPC
+- RLS, `SECURITY INVOKER`, service-role 전용 접근
+
+긴급 safety 알림에서는 기억 후보 확인을 보내지 않는다. 반대 결정으로의 수정과 상충 이력은 E05에서 처리한다.

@@ -33,6 +33,32 @@ export function parseTextUpdate(update) {
   };
 }
 
+export function parseMemoryCallbackUpdate(update) {
+  const query = update?.callback_query;
+  const match = typeof query?.data === "string"
+    ? /^memory:(confirm|reject):([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.exec(query.data)
+    : null;
+  if (
+    !Number.isSafeInteger(update?.update_id)
+    || typeof query?.id !== "string"
+    || query.id.length === 0
+    || !Number.isSafeInteger(query?.from?.id)
+    || !Number.isSafeInteger(query?.message?.message_id)
+    || !Number.isSafeInteger(query?.message?.chat?.id)
+    || !match
+  ) return null;
+
+  return {
+    updateId: update.update_id,
+    callbackQueryId: query.id,
+    messageId: query.message.message_id,
+    chatId: String(query.message.chat.id),
+    userId: String(query.from.id),
+    decision: match[1],
+    memoryCandidateId: match[2].toLowerCase()
+  };
+}
+
 export class TelegramApiError extends Error {
   /**
    * @param {string} message
@@ -56,11 +82,11 @@ export class TelegramClient {
     this.logger = logger;
   }
 
-  async sendText(chatId, text) {
-    const response = await fetchWithRetry(`${this.baseUrl}/sendMessage`, {
+  async call(method, body) {
+    const response = await fetchWithRetry(`${this.baseUrl}/${method}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text })
+      body: JSON.stringify(body)
     }, {
       timeoutMs: this.timeoutMs,
       ...this.retry,
@@ -95,13 +121,43 @@ export class TelegramClient {
       });
     }
 
-    if (!Number.isSafeInteger(payload?.result?.message_id)) {
+    return { result: payload.result, status: response.status };
+  }
+
+  /** @param {{replyMarkup?: object}} [options] */
+  async sendText(chatId, text, options = {}) {
+    const { replyMarkup } = options;
+    const { result, status } = await this.call("sendMessage", {
+      chat_id: chatId,
+      text,
+      ...(replyMarkup ? { reply_markup: replyMarkup } : {})
+    });
+    if (!Number.isSafeInteger(result?.message_id)) {
       throw new TelegramApiError("Telegram response is missing a message ID", {
-        status: response.status,
+        status,
         code: "TELEGRAM_INVALID_RESPONSE"
       });
     }
+    return { messageId: String(result.message_id) };
+  }
 
-    return { messageId: String(payload.result.message_id) };
+  async answerCallbackQuery(callbackQueryId, text) {
+    const { result } = await this.call("answerCallbackQuery", {
+      callback_query_id: callbackQueryId,
+      text
+    });
+    if (result !== true) {
+      throw new TelegramApiError("Telegram did not accept the callback answer", {
+        code: "TELEGRAM_INVALID_RESPONSE"
+      });
+    }
+  }
+
+  async removeInlineKeyboard(chatId, messageId) {
+    await this.call("editMessageReplyMarkup", {
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: { inline_keyboard: [] }
+    });
   }
 }

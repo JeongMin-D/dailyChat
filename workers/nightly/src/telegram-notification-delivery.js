@@ -76,6 +76,25 @@ export function formatTelegramNotification(payload) {
   throw new TypeError("Unsupported notification type");
 }
 
+export function formatMemoryConfirmation(payload) {
+  if (
+    typeof payload?.fact !== "string"
+    || payload.fact.length < 1
+    || payload.fact.length > 500
+    || typeof payload?.memoryCandidateId !== "string"
+    || !UUID_PATTERN.test(payload.memoryCandidateId)
+  ) throw new TypeError("A memory confirmation payload is required");
+  return {
+    text: `이 내용을 앞으로 기억해도 될까요?\n\n${payload.fact}`,
+    replyMarkup: {
+      inline_keyboard: [[
+        { text: "기억할게요", callback_data: `memory:confirm:${payload.memoryCandidateId}` },
+        { text: "기억하지 않기", callback_data: `memory:reject:${payload.memoryCandidateId}` }
+      ]]
+    }
+  };
+}
+
 function classifyTelegramFailure(error) {
   const status = Number(error?.status);
   if (status === 429) return { code: "TELEGRAM_RATE_LIMITED", retryable: true };
@@ -171,6 +190,64 @@ export class TelegramNotificationDelivery {
     }
 
     await this.store.markSent({ notificationId, providerMessageId: messageId });
+    return { action: "sent", notificationId, providerMessageId: messageId };
+  }
+
+  async deliverMemoryConfirmations(jobRunId) {
+    const notifications = await this.store.enqueueMemoryConfirmations(jobRunId);
+    const results = [];
+    for (const { notificationId } of notifications) {
+      results.push(await this.deliverMemoryConfirmation(notificationId));
+    }
+    return results;
+  }
+
+  async deliverMemoryConfirmation(notificationId) {
+    if (typeof notificationId !== "string" || !UUID_PATTERN.test(notificationId)) {
+      throw new TypeError("notificationId must be a UUID");
+    }
+    const payload = await this.store.claimMemoryConfirmation(notificationId);
+    if (payload === null) return { action: "not_claimed", notificationId };
+
+    const formatted = formatMemoryConfirmation(payload);
+    let messageId;
+    try {
+      ({ messageId } = await this.telegramClient.sendText(
+        payload.recipientChatId,
+        formatted.text,
+        { replyMarkup: formatted.replyMarkup }
+      ));
+    } catch (error) {
+      const failure = classifyTelegramFailure(error);
+      const retryable = failure.retryable && payload.attempt < this.maxAttempts;
+      const serverDelay = Number(error?.retryAfterSeconds);
+      const retryAfterSeconds = retryable
+        ? retryDelaySeconds({
+            attempt: payload.attempt,
+            baseDelaySeconds: this.baseDelaySeconds,
+            maxDelaySeconds: this.maxDelaySeconds,
+            serverDelaySeconds: Number.isInteger(serverDelay) && serverDelay >= 0
+              ? serverDelay
+              : null
+          })
+        : 0;
+      await this.store.markMemoryConfirmationFailed({
+        notificationId,
+        errorCode: failure.code,
+        retryable,
+        retryAfterSeconds
+      });
+      return {
+        action: retryable ? "retry_scheduled" : "failed",
+        notificationId,
+        errorCode: failure.code,
+        retryAfterSeconds
+      };
+    }
+    await this.store.markMemoryConfirmationSent({
+      notificationId,
+      providerMessageId: messageId
+    });
     return { action: "sent", notificationId, providerMessageId: messageId };
   }
 }

@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   formatDiaryNotification,
+  formatMemoryConfirmation,
   formatSafetyGuidanceNotification,
   SAFETY_GUIDANCE_TEXT,
   TelegramNotificationDelivery
@@ -52,6 +53,53 @@ test("claim한 일기를 일반 텍스트로 보내고 provider message ID를 �
     }],
     ["sent", { notificationId: NOTIFICATION_ID, providerMessageId: "321" }]
   ]);
+});
+
+test("기억 후보는 UUID callback_data가 있는 확인·거절 버튼으로 보낸다", async () => {
+  const candidateId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const formatted = formatMemoryConfirmation({
+    memoryCandidateId: candidateId,
+    fact: "매주 토요일에는 등산을 한다"
+  });
+  assert.match(formatted.text, /기억해도 될까요/);
+  assert.deepEqual(formatted.replyMarkup.inline_keyboard[0].map(({ callback_data }) => callback_data), [
+    `memory:confirm:${candidateId}`,
+    `memory:reject:${candidateId}`
+  ]);
+  assert.ok(Buffer.byteLength(`memory:confirm:${candidateId}`) <= 64);
+});
+
+test("대기 중인 기억 후보를 후보별 Telegram 버튼으로 보내고 완료 처리한다", async () => {
+  const candidateId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const calls = [];
+  const store = {
+    enqueueMemoryConfirmations: async () => [{ notificationId: NOTIFICATION_ID }],
+    claimMemoryConfirmation: async () => ({
+      notificationId: NOTIFICATION_ID,
+      memoryCandidateId: candidateId,
+      recipientChatId: "200",
+      attempt: 1,
+      category: "routine",
+      fact: "매주 토요일에는 등산을 한다"
+    }),
+    markMemoryConfirmationSent: async (value) => calls.push(["sent", value])
+  };
+  const telegramClient = {
+    sendText: async (chatId, text, options) => {
+      calls.push(["send", { chatId, text, options }]);
+      return { messageId: "777" };
+    }
+  };
+
+  const results = await new TelegramNotificationDelivery({ store, telegramClient })
+    .deliverMemoryConfirmations("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+
+  assert.equal(results[0].action, "sent");
+  assert.equal(calls[0][1].options.replyMarkup.inline_keyboard.length, 1);
+  assert.deepEqual(calls[1], ["sent", {
+    notificationId: NOTIFICATION_ID,
+    providerMessageId: "777"
+  }]);
 });
 
 test("concern 일기는 고정 지지 문구와 함께 보내되 본문 흐름을 유지한다", () => {

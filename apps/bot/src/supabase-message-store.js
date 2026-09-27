@@ -37,6 +37,23 @@ export class SupabaseMessageStore {
     });
   }
 
+  async decideMemoryCandidate({ memoryCandidateId, decision, userId, chatId }) {
+    const result = await this.request("/rpc/decide_memory_candidate", {
+      method: "POST",
+      body: JSON.stringify({
+        p_memory_candidate_id: memoryCandidateId,
+        p_decision: decision,
+        p_telegram_user_id: Number(userId),
+        p_telegram_chat_id: Number(chatId)
+      })
+    });
+    if (
+      !["updated", "noop", "conflict"].includes(result?.action)
+      || !["confirmed", "rejected"].includes(result?.status)
+    ) throw new Error("Supabase memory decision returned an invalid response");
+    return result;
+  }
+
   async saveUserMessage(message) {
     await this.request("/messages", {
       method: "POST",

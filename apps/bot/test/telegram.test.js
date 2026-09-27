@@ -1,7 +1,28 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { TelegramClient } from "../src/telegram.js";
+import { parseMemoryCallbackUpdate, TelegramClient } from "../src/telegram.js";
+
+test("기억 확인 callback_data를 제한된 형식으로 해석한다", () => {
+  assert.deepEqual(parseMemoryCallbackUpdate({
+    update_id: 1,
+    callback_query: {
+      id: "query-1",
+      from: { id: 100 },
+      message: { message_id: 20, chat: { id: 200 } },
+      data: "memory:reject:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+    }
+  }), {
+    updateId: 1,
+    callbackQueryId: "query-1",
+    messageId: 20,
+    chatId: "200",
+    userId: "100",
+    decision: "reject",
+    memoryCandidateId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+  });
+  assert.equal(parseMemoryCallbackUpdate({ update_id: 1, callback_query: { data: "bad" } }), null);
+});
 
 test("Telegram 429의 retry_after 이후 메시지 전송을 재시도한다", async () => {
   let attempts = 0;

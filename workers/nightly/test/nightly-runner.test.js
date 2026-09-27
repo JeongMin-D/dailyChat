@@ -83,13 +83,17 @@ function createDependencies({ prepareAction = "created", messages } = {}) {
       notificationStore: {
         async enqueue(values) {
           calls.push(["enqueue", values]);
-          return { notificationId: NOTIFICATION_ID };
+          return { notificationId: NOTIFICATION_ID, safetyLevel: "none" };
         }
       },
       notificationDelivery: {
         async deliver(notificationId) {
           calls.push(["deliver", notificationId]);
           return { action: "sent", notificationId, providerMessageId: "101" };
+        },
+        async deliverMemoryConfirmations(jobRunId) {
+          calls.push(["deliver-memory", jobRunId]);
+          return [];
         }
       }
     }
@@ -112,7 +116,8 @@ test("입력부터 Telegram 전송까지 순서대로 한 번 실행한다", asy
     "extract",
     "save",
     "enqueue",
-    "deliver"
+    "deliver",
+    "deliver-memory"
   ]);
   assert.equal(calls[1][1].pipelineVersion, "nightly-pipeline-v2");
   assert.equal(calls[1][1].schemaVersion, "1.1.0");
@@ -126,7 +131,9 @@ test("성공한 동일 입력은 추출과 저장 없이 기존 알림을 재개
   const result = await runner.run({ day: DAY });
 
   assert.equal(result.action, "noop");
-  assert.deepEqual(calls.map(([name]) => name), ["input", "prepare", "enqueue", "deliver"]);
+  assert.deepEqual(calls.map(([name]) => name), [
+    "input", "prepare", "enqueue", "deliver", "deliver-memory"
+  ]);
 });
 
 test("사용자 메시지가 없으면 job과 외부 API를 만들지 않는다", async () => {
@@ -178,7 +185,8 @@ test("멈춘 running job은 DB claim이 허용하면 이어서 실행한다", as
     "extract",
     "save",
     "enqueue",
-    "deliver"
+    "deliver",
+    "deliver-memory"
   ]);
 });
 
