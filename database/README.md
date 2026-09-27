@@ -72,3 +72,15 @@ outbox에는 사용자 원문이나 일기 본문을 복제하지 않습니다. 
 - `messages.day`는 `settings.timezone`과 `day_boundary_hour`로 계산한 `date`
 - insert 또는 `sent_at`/`day` update 때 `local_day()` 결과와 supplied day 대조
 - trigger 함수는 `SECURITY INVOKER`이며 Data API 역할의 직접 실행 권한 없음
+
+## 기억 후보와 근거
+
+`20260927160533_m3_memory_candidates.sql`은 M3 E01 기억 후보 원장을 시작한다.
+
+- 분류·사실·확신도·확인 상태와 유효 기간
+- 원문 message와 검증된 event의 유형별 FK 근거
+- 원문·event 삭제 전 영향 처리를 강제하는 `RESTRICT`
+- 후보 삭제 시 연결 행만 제거하는 `CASCADE`
+- 모든 테이블 RLS와 server-only 명시 권한
+
+후보 판단, 사용자 확인, 활성 기억 버전과 투영은 후속 E02~E07에서 구현한다. 부모당 최소 한 개 근거와 job snapshot 소속은 저장 트랜잭션에서 강제한다.
