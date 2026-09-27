@@ -33,13 +33,13 @@ test("필수 서버 설정을 읽고 안전한 기본값을 적용한다", () =>
 test("대시보드 인증 정보는 함께 설정하고 최소 길이 비밀번호를 요구한다", () => {
   assert.throws(() => loadConfig({ ...valid, DASHBOARD_USERNAME: "admin" }), /configured together/);
   assert.throws(
-    () => loadConfig({ ...valid, DASHBOARD_USERNAME: "admin", DASHBOARD_PASSWORD: "000" }),
-    /at least 4/
+    () => loadConfig({ ...valid, DASHBOARD_USERNAME: "admin", DASHBOARD_PASSWORD: "short-password" }),
+    /at least 16/
   );
   const config = loadConfig({
     ...valid,
     DASHBOARD_USERNAME: "admin",
-    DASHBOARD_PASSWORD: "test"
+    DASHBOARD_PASSWORD: "test-password-16"
   });
   assert.equal(config.dashboard.username, "admin");
 });

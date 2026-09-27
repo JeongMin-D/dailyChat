@@ -10,7 +10,7 @@ updated: 2026-09-27
 
 ## 현재 포커스
 
-- 현재 단계: M1 완료, M2 GitHub Actions 첫 live·즉시 skip 검증 완료·예약 실행 대기
+- 현재 단계: M1·M2 완료, M3 착수 전 Dashboard 접근·배포 운영 보완
 - 완료: ADR-001~006 P0 결정 승인 및 문서화
 - 완료: C01 event/mood/health/diary JSON Schema와 의미 검증
 - 완료: C02 DB 제약과 애플리케이션 타입 target 계약 및 자동 대조
@@ -35,9 +35,10 @@ updated: 2026-09-27
 - 완료: 인증된 Web Dashboard의 오늘 요약·일기·타임라인·검색·기분/건강 화면 배포
 - 완료: Dashboard 날짜 입력으로 원하는 날짜의 일기·타임라인 직접 조회
 - 완료: Dashboard 데스크톱·태블릿·모바일 유동형 재배치와 디자인 깨짐 수정
-- 완료: Dashboard 테스트 로그인 정책의 구성·회귀 테스트 동기화
+- 완료: Dashboard 인증 최소 길이 16자 정책의 구성·회귀 테스트 동기화
 - 완료: Dashboard 반응형 개선 Render 배포와 공개 health·인증 보호 확인
-- 다음 작업: 첫 04:05 KST 예약 실행 검증
+- 완료: GitHub Actions 예약 실행 2회 성공과 빈 입력 no-op 확인
+- 다음 작업: [[11 실행 체크리스트]] P0 Dashboard 접근 복구와 Render 자동 배포 검증
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
