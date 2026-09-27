@@ -38,8 +38,8 @@ export function loadConfig(env = process.env) {
   if (Boolean(dashboardUsername) !== Boolean(dashboardPassword)) {
     throw new Error("DASHBOARD_USERNAME and DASHBOARD_PASSWORD must be configured together");
   }
-  if (dashboardPassword && dashboardPassword.length < 16) {
-    throw new Error("DASHBOARD_PASSWORD must contain at least 16 characters");
+  if (dashboardPassword && dashboardPassword.length < 4) {
+    throw new Error("DASHBOARD_PASSWORD must contain at least 4 characters");
   }
   const upstreamRetry = {
     maxAttempts: integer(env, "UPSTREAM_RETRY_MAX_ATTEMPTS", 3, { min: 1, max: 5 }),

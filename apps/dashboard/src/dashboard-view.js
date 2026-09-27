@@ -13,6 +13,7 @@ function formatTime(value) {
   if (Number.isNaN(date.valueOf())) return "시간 미상";
   return new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
+    hourCycle: "h23",
     hour: "2-digit",
     minute: "2-digit"
   }).format(date);
@@ -26,7 +27,7 @@ function moodChart(items) {
   if (items.length === 0) return empty("아직 기분 기록이 없습니다.");
   return `<div class="mood-chart" aria-label="최근 기분 점수">${items.slice().reverse().map((item) => `
     <div class="mood-bar" title="${escapeHtml(item.day)} · ${escapeHtml(item.label)} · ${item.score}/5">
-      <span style="height:${Math.max(16, Number(item.score) * 18)}%"></span>
+      <span class="score-${Math.min(5, Math.max(1, Math.round(Number(item.score) || 1)))}"></span>
       <small>${escapeHtml(item.day.slice(5))}</small>
     </div>`).join("")}</div>`;
 }
@@ -76,11 +77,12 @@ export function renderDashboard(data) {
 <body><div class="shell">
   <aside><a class="brand" href="/dashboard"><span>MC</span><div><strong>MindCompanion</strong><small>나의 하루 아카이브</small></div></a>
     <nav><a href="#today">오늘</a><a href="#diary">일기</a><a href="#timeline">타임라인</a><a href="#wellbeing">기분·건강</a></nav>
-    <div class="calendar"><div class="section-label">최근 기록</div>${dayLinks || empty("아직 기록이 없습니다.")}</div>
+    <div class="calendar"><div class="section-label">최근 기록</div><div class="day-list">${dayLinks || empty("아직 기록이 없습니다.")}</div></div>
     <footer><span class="status-dot"></span> Telegram · Supabase 연결</footer>
   </aside>
   <main>
     <header class="topbar"><div><span class="eyebrow">PERSONAL DAILY LOG</span><h1>${escapeHtml(data.selectedDay)}</h1></div>
+      <form class="date-picker" action="/dashboard" method="get"><label><span>날짜 선택</span><input type="date" name="day" value="${escapeHtml(data.selectedDay)}"></label><button>날짜 보기</button></form>
       <form action="/dashboard" method="get"><input type="hidden" name="day" value="${escapeHtml(data.selectedDay)}"><label><span>기록 검색</span><input name="q" value="${escapeHtml(data.query)}" maxlength="100" placeholder="키워드를 입력하세요"></label><button>검색</button></form>
     </header>
     ${search}
@@ -92,7 +94,7 @@ export function renderDashboard(data) {
     </section>
     <section id="diary" class="card diary">${diaryBody}</section>
     <div class="grid">
-      <section id="timeline" class="card"><div class="card-title"><div><span class="eyebrow">TIMELINE</span><h2>하루의 흐름</h2></div><span>${data.messages.length + data.events.length + data.health.length}개</span></div>${timeline(data)}</section>
+      <section id="timeline" class="card"><div class="card-title"><div><span class="eyebrow">TIMELINE</span><h2>하루의 흐름</h2></div><span class="count-pill">${data.messages.length + data.events.length + data.health.length}개</span></div>${timeline(data)}</section>
       <section id="wellbeing" class="stack">
         <article class="card"><div class="card-title"><div><span class="eyebrow">MOOD</span><h2>최근 기분</h2></div></div>${moodChart(data.recentMoods)}</article>
         <article class="card"><div class="card-title"><div><span class="eyebrow">HEALTH</span><h2>건강 메모</h2></div></div>${health}</article>
@@ -103,7 +105,88 @@ export function renderDashboard(data) {
 }
 
 export const dashboardStyles = `
-:root{color-scheme:dark;--bg:#0b0e0d;--panel:#131816;--panel2:#181e1b;--line:#2a322e;--text:#f1f5f2;--muted:#9aa69f;--mint:#a8f0c6;--mint2:#4ecb86;--amber:#e9b76a}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 80% 0,#163326 0,transparent 30%),var(--bg);color:var(--text);font:15px/1.6 Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.shell{min-height:100vh;display:grid;grid-template-columns:270px 1fr}aside{position:sticky;top:0;height:100vh;padding:28px 22px;border-right:1px solid var(--line);background:rgba(11,14,13,.88);backdrop-filter:blur(18px);display:flex;flex-direction:column}.brand{display:flex;align-items:center;gap:12px;color:inherit;text-decoration:none}.brand>span{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:var(--mint);color:#0a2517;font-weight:900}.brand strong{display:block;font-size:16px}.brand small{color:var(--muted)}nav{display:grid;gap:5px;margin:42px 0 30px}nav a{color:var(--muted);text-decoration:none;padding:10px 12px;border-radius:9px}nav a:hover{background:var(--panel2);color:var(--text)}.section-label,.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--mint2);font-weight:800}.calendar{min-height:0;overflow:auto}.day{display:grid;padding:10px 12px;margin:6px 0;border:1px solid transparent;border-radius:10px;text-decoration:none;color:var(--muted)}.day strong{color:var(--text)}.day span{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.day:hover,.day.active{border-color:#385344;background:#17221c}.day.active strong{color:var(--mint)}aside footer{margin-top:auto;color:var(--muted);font-size:12px}.status-dot{display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:50%;background:var(--mint2);box-shadow:0 0 12px var(--mint2)}main{width:min(1200px,100%);padding:44px 5vw 80px}.topbar{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:28px}h1,h2,h3,p{margin-top:0}h1{font-size:clamp(32px,5vw,56px);line-height:1;margin:8px 0 0;letter-spacing:-.04em}h2{font-size:22px;margin:5px 0;letter-spacing:-.02em}.topbar form{display:flex;align-items:end;gap:8px}.topbar label span{display:block;color:var(--muted);font-size:12px}.topbar input{width:min(300px,42vw);padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--text)}button{padding:12px 16px;border:0;border-radius:10px;background:var(--mint);color:#102519;font-weight:800;cursor:pointer}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.stats article,.card,.search-results{background:linear-gradient(145deg,rgba(27,34,31,.96),rgba(17,22,20,.96));border:1px solid var(--line);border-radius:18px}.stats article{padding:20px}.stats span,.stats small{display:block;color:var(--muted)}.stats strong{display:block;font-size:30px;color:var(--mint);margin:4px 0}.card{padding:26px;margin-bottom:16px}.diary{min-height:300px;background:radial-gradient(circle at 100% 0,rgba(78,203,134,.13),transparent 34%),linear-gradient(145deg,#1b211e,#111513)}.diary-header,.card-title{display:flex;justify-content:space-between;gap:20px}.tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:end}.tags span,.card-title>span{font-size:12px;color:var(--mint);border:1px solid #345442;border-radius:999px;padding:5px 10px}.mood-summary{color:var(--amber);font-size:16px}.diary-copy{font-family:Georgia,"Noto Serif KR",serif;font-size:18px;line-height:1.9;max-width:760px}.grid{display:grid;grid-template-columns:1.35fr .8fr;gap:16px}.stack>.card{min-height:190px}.timeline{list-style:none;padding:0;margin:18px 0 0}.timeline li{display:grid;grid-template-columns:55px 48px 1fr;gap:12px;padding:14px 0;border-top:1px solid var(--line)}.timeline time{font-size:12px;color:var(--muted)}.timeline p{margin:0;white-space:pre-wrap}.badge{font-size:11px;text-align:center;height:24px;border-radius:999px;background:#273029;color:var(--mint);padding:2px 6px}.timeline .assistant .badge{color:#b8c6ff}.timeline .event .badge{color:var(--amber)}.timeline .health .badge{color:#ffb7b7}.mood-chart{height:145px;display:flex;align-items:end;gap:8px;padding-top:15px}.mood-bar{height:100%;flex:1;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:6px}.mood-bar span{display:block;width:100%;max-width:24px;border-radius:8px 8px 3px 3px;background:linear-gradient(var(--mint),var(--mint2))}.mood-bar small{color:var(--muted);font-size:9px;writing-mode:vertical-rl}.health-list{list-style:none;padding:0}.health-list li{padding:12px 0;border-top:1px solid var(--line)}.health-list strong{display:block}.health-list p{color:var(--muted);margin:4px 0}.severity{font-size:10px;color:var(--muted)}.empty{padding:28px;border:1px dashed #39413d;border-radius:12px;color:var(--muted);text-align:center}.search-results{padding:22px;margin-bottom:16px}.search-results h3 span{color:var(--mint)}.search-results article{padding:12px 0;border-top:1px solid var(--line)}.search-results article>span{color:var(--mint);margin-right:10px}.search-results time{color:var(--muted);font-size:12px}.search-results p{margin:5px 0;white-space:pre-wrap}@media(max-width:900px){.shell{grid-template-columns:1fr}aside{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line)}nav{display:flex;margin:22px 0;overflow:auto}.calendar{display:flex;gap:6px}.day{min-width:120px}.brand{justify-content:center}aside footer{display:none}main{padding:28px 18px 60px}.topbar{align-items:stretch;flex-direction:column}.topbar form{width:100%}.topbar label{flex:1}.topbar input{width:100%}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}@media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.stats article{padding:15px}.card{padding:19px}.diary-header{display:block}.tags{justify-content:start}.timeline li{grid-template-columns:46px 42px 1fr}}
+:root{color-scheme:dark;--bg:#0b0e0d;--panel:#131816;--panel2:#181e1b;--line:#2a322e;--text:#f1f5f2;--muted:#9aa69f;--mint:#a8f0c6;--mint2:#4ecb86;--amber:#e9b76a}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 80% 0,#163326 0,transparent 30%),var(--bg);color:var(--text);font:15px/1.6 Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.shell{min-height:100vh;display:grid;grid-template-columns:270px 1fr}aside{position:sticky;top:0;height:100vh;padding:28px 22px;border-right:1px solid var(--line);background:rgba(11,14,13,.88);backdrop-filter:blur(18px);display:flex;flex-direction:column}.brand{display:flex;align-items:center;gap:12px;color:inherit;text-decoration:none}.brand>span{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:var(--mint);color:#0a2517;font-weight:900}.brand strong{display:block;font-size:16px}.brand small{color:var(--muted)}nav{display:grid;gap:5px;margin:42px 0 30px}nav a{color:var(--muted);text-decoration:none;padding:10px 12px;border-radius:9px}nav a:hover{background:var(--panel2);color:var(--text)}.section-label,.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--mint2);font-weight:800}.calendar{min-height:0;overflow:auto}.day{display:grid;padding:10px 12px;margin:6px 0;border:1px solid transparent;border-radius:10px;text-decoration:none;color:var(--muted)}.day strong{color:var(--text)}.day span{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.day:hover,.day.active{border-color:#385344;background:#17221c}.day.active strong{color:var(--mint)}aside footer{margin-top:auto;color:var(--muted);font-size:12px}.status-dot{display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:50%;background:var(--mint2);box-shadow:0 0 12px var(--mint2)}main{width:min(1200px,100%);padding:44px 5vw 80px}.topbar{display:grid;grid-template-columns:minmax(230px,1fr) auto auto;align-items:end;gap:18px;margin-bottom:28px}h1,h2,h3,p{margin-top:0}h1{font-size:clamp(32px,5vw,56px);line-height:1;margin:8px 0 0;letter-spacing:-.04em}h2{font-size:22px;margin:5px 0;letter-spacing:-.02em}.topbar form{display:flex;align-items:end;gap:8px}.topbar label span{display:block;color:var(--muted);font-size:12px}.topbar input{padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--text)}.topbar form:not(.date-picker) input:not([type="hidden"]){width:min(300px,32vw)}.date-picker input{width:150px;color-scheme:dark}button{padding:12px 16px;border:0;border-radius:10px;background:var(--mint);color:#102519;font-weight:800;cursor:pointer}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.stats article,.card,.search-results{background:linear-gradient(145deg,rgba(27,34,31,.96),rgba(17,22,20,.96));border:1px solid var(--line);border-radius:18px}.stats article{padding:20px}.stats span,.stats small{display:block;color:var(--muted)}.stats strong{display:block;font-size:30px;color:var(--mint);margin:4px 0}.card{padding:26px;margin-bottom:16px}.diary{min-height:300px;background:radial-gradient(circle at 100% 0,rgba(78,203,134,.13),transparent 34%),linear-gradient(145deg,#1b211e,#111513)}.diary-header,.card-title{display:flex;justify-content:space-between;gap:20px}.tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:end}.tags span,.card-title>span{font-size:12px;color:var(--mint);border:1px solid #345442;border-radius:999px;padding:5px 10px}.mood-summary{color:var(--amber);font-size:16px}.diary-copy{font-family:Georgia,"Noto Serif KR",serif;font-size:18px;line-height:1.9;max-width:760px}.grid{display:grid;grid-template-columns:1.35fr .8fr;gap:16px}.stack>.card{min-height:190px}.timeline{list-style:none;padding:0;margin:18px 0 0}.timeline li{display:grid;grid-template-columns:55px 48px 1fr;gap:12px;padding:14px 0;border-top:1px solid var(--line)}.timeline time{font-size:12px;color:var(--muted)}.timeline p{margin:0;white-space:pre-wrap}.badge{font-size:11px;text-align:center;height:24px;border-radius:999px;background:#273029;color:var(--mint);padding:2px 6px}.timeline .assistant .badge{color:#b8c6ff}.timeline .event .badge{color:var(--amber)}.timeline .health .badge{color:#ffb7b7}.mood-chart{height:145px;display:flex;align-items:end;gap:8px;padding-top:15px}.mood-bar{height:100%;flex:1;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:6px}.mood-bar span{display:block;width:100%;max-width:24px;border-radius:8px 8px 3px 3px;background:linear-gradient(var(--mint),var(--mint2))}.mood-bar small{color:var(--muted);font-size:9px;writing-mode:vertical-rl}.health-list{list-style:none;padding:0}.health-list li{padding:12px 0;border-top:1px solid var(--line)}.health-list strong{display:block}.health-list p{color:var(--muted);margin:4px 0}.severity{font-size:10px;color:var(--muted)}.empty{padding:28px;border:1px dashed #39413d;border-radius:12px;color:var(--muted);text-align:center}.search-results{padding:22px;margin-bottom:16px}.search-results h3 span{color:var(--mint)}.search-results article{padding:12px 0;border-top:1px solid var(--line)}.search-results article>span{color:var(--mint);margin-right:10px}.search-results time{color:var(--muted);font-size:12px}.search-results p{margin:5px 0;white-space:pre-wrap}@media(max-width:1100px){.topbar{grid-template-columns:1fr auto}.topbar>div{grid-column:1/-1}}@media(max-width:900px){.shell{grid-template-columns:1fr}aside{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line)}nav{display:flex;margin:22px 0;overflow:auto}.calendar{display:flex;gap:6px}.day{min-width:120px}.brand{justify-content:center}aside footer{display:none}main{padding:28px 18px 60px}.topbar{display:flex;align-items:stretch;flex-direction:column}.topbar form{width:100%}.topbar label{flex:1}.topbar input,.topbar form:not(.date-picker) input:not([type="hidden"]),.date-picker input{width:100%}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}@media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.stats article{padding:15px}.card{padding:19px}.diary-header{display:block}.tags{justify-content:start}.timeline li{grid-template-columns:46px 42px 1fr}}
+
+/* Fluid responsive layout overrides */
+body{min-width:280px}
+button,input{font:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid rgba(168,240,198,.75);outline-offset:3px}
+.shell{grid-template-columns:clamp(230px,19vw,270px) minmax(0,1fr)}
+main{min-width:0;width:100%;max-width:1280px;margin-inline:auto;padding:clamp(28px,4vw,52px) clamp(20px,4vw,58px) 80px}
+.calendar{display:flex;flex-direction:column;overflow:hidden}
+.day-list{min-height:0;overflow-y:auto;scrollbar-width:thin}
+.topbar{grid-template-columns:minmax(210px,1fr) max-content minmax(250px,340px);gap:clamp(12px,2vw,24px)}
+.topbar form,.topbar label{min-width:0}
+.topbar label{flex:1}
+.topbar input{min-height:44px;max-width:100%}
+.topbar button{flex:0 0 auto;min-height:44px;white-space:nowrap}
+h1{font-size:clamp(30px,4.5vw,56px)}
+h2{font-size:clamp(20px,2.2vw,24px)}
+.stats{grid-template-columns:repeat(auto-fit,minmax(min(155px,100%),1fr));gap:clamp(10px,1.5vw,14px)}
+.stats article{min-width:0;padding:clamp(15px,2vw,21px)}
+.card{min-width:0;padding:clamp(19px,2.5vw,28px)}
+.diary-header,.card-title{align-items:flex-start;min-width:0}
+.diary-header>div:first-child,.card-title>div:first-child{min-width:0}
+.tags{max-width:48%;align-content:flex-start}
+.tags span{display:inline-flex;flex:0 0 auto;align-items:center;white-space:nowrap;line-height:1.2}
+.card-title>.count-pill{display:inline-flex;flex:0 0 auto;align-items:center;align-self:flex-start;white-space:nowrap;line-height:1.2}
+.grid{grid-template-columns:minmax(0,1.35fr) minmax(260px,.8fr)}
+.timeline li{grid-template-columns:clamp(48px,6vw,60px) clamp(42px,5vw,52px) minmax(0,1fr);gap:clamp(8px,1.5vw,14px)}
+.timeline time{white-space:nowrap;font-variant-numeric:tabular-nums}
+.timeline p,.diary-copy,.search-results p{overflow-wrap:anywhere}
+.badge{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;align-self:start}
+.mood-chart{overflow-x:auto;overflow-y:hidden;padding-bottom:4px;scrollbar-width:thin}
+.mood-bar{min-width:30px}
+.mood-bar span{height:18%}
+.mood-bar .score-2{height:36%}
+.mood-bar .score-3{height:54%}
+.mood-bar .score-4{height:72%}
+.mood-bar .score-5{height:90%}
+.mood-bar small{writing-mode:horizontal-tb;white-space:nowrap}
+
+@media(max-width:1180px){
+  .topbar{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .topbar>div{grid-column:1/-1}
+  .topbar form:not(.date-picker) input:not([type="hidden"]),.date-picker input{width:100%}
+  .grid{grid-template-columns:1fr}
+  .stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .stack>.card{margin-bottom:0}
+}
+
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  aside{position:relative;height:auto;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:16px;padding:18px clamp(18px,4vw,32px)}
+  .brand{justify-content:flex-start}
+  nav{justify-content:flex-end;margin:0;white-space:nowrap;scrollbar-width:thin}
+  .calendar{grid-column:1/-1;gap:7px}
+  .day-list{display:flex;gap:7px;overflow-x:auto;overflow-y:hidden;padding-bottom:4px}
+  .day{flex:0 0 clamp(120px,26vw,170px);margin:0}
+  aside footer{display:none}
+  main{padding:clamp(24px,5vw,40px) clamp(16px,4vw,32px) 64px}
+}
+
+@media(max-width:650px){
+  aside{grid-template-columns:1fr;gap:14px}
+  .brand{justify-content:center}
+  nav{justify-content:flex-start;overflow-x:auto}
+  nav a{flex:0 0 auto}
+  .topbar{grid-template-columns:1fr;gap:14px}
+  .topbar>div{grid-column:auto}
+  .topbar form{width:100%}
+  .topbar form:not(.date-picker) input:not([type="hidden"]),.date-picker input{width:100%}
+  .stack{grid-template-columns:1fr}
+  .stack>.card{margin-bottom:16px}
+  .diary-header{display:block}
+  .tags{justify-content:flex-start;max-width:100%;margin-top:12px}
+  .timeline li{grid-template-columns:48px 42px minmax(0,1fr)}
+}
+
+@media(max-width:360px){
+  .stats{grid-template-columns:1fr}
+  .topbar form{align-items:stretch;flex-direction:column}
+  .topbar button{width:100%}
+  .timeline li{grid-template-columns:42px 38px minmax(0,1fr);gap:7px}
+}
 `;
 
 export function renderDashboardError() {

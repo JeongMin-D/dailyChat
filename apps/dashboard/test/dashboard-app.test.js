@@ -14,7 +14,7 @@ const data = {
   health: [],
   diary: { id: "d1", version: 1, title: "테스트 일기", summary_mood: null, tags: [], created_at: "2026-09-24T19:00:00Z" },
   blocks: [{ position: 0, text: "근거 있는 일기" }],
-  recentMoods: [],
+  recentMoods: [{ day: "2026-09-24", score: 3, label: "보통" }],
   query: "",
   searchResults: []
 };
@@ -55,6 +55,10 @@ test("인증된 사용자에게 실제 기록 화면을 렌더링한다", async 
     const html = await response.text();
     assert.match(html, /MindCompanion/);
     assert.match(html, /근거 있는 일기/);
+    assert.match(html, /type="date" name="day" value="2026-09-24"/);
+    assert.match(html, />날짜 보기<\/button>/);
+    assert.match(html, /class="score-3"/);
+    assert.doesNotMatch(html, /style="height:/);
     assert.doesNotMatch(html, /service.role|SUPABASE_SERVICE_ROLE_KEY/i);
   });
   assert.deepEqual(received, { day: "2026-09-24", query: "기록" });
