@@ -1,7 +1,7 @@
 ---
 tags: [mindcompanion, backlog]
 status: active
-updated: 2026-09-26
+updated: 2026-09-27
 ---
 
 # MVP 백로그
@@ -36,6 +36,7 @@ updated: 2026-09-26
 - 완료: Dashboard 날짜 입력으로 원하는 날짜의 일기·타임라인 직접 조회
 - 완료: Dashboard 데스크톱·태블릿·모바일 유동형 재배치와 디자인 깨짐 수정
 - 완료: Dashboard 테스트 로그인 정책의 구성·회귀 테스트 동기화
+- 완료: Dashboard 반응형 개선 Render 배포와 공개 health·인증 보호 확인
 - 다음 작업: 첫 04:05 KST 예약 실행 검증
 - 전체 상태: [[15 현재 진행 현황]]
 
