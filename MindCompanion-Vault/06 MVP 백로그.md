@@ -1,7 +1,7 @@
 ---
 tags: [mindcompanion, backlog]
 status: active
-updated: 2026-09-27
+updated: 2026-09-28
 ---
 
 # MVP 백로그
@@ -10,7 +10,7 @@ updated: 2026-09-27
 
 ## 현재 포커스
 
-- 현재 단계: M1·M2 완료, M3 착수 전 Dashboard 접근·배포 운영 보완
+- 현재 단계: M1·M2 완료, M3 착수 전 Scheduler 운영 기준 확정
 - 완료: ADR-001~006 P0 결정 승인 및 문서화
 - 완료: C01 event/mood/health/diary JSON Schema와 의미 검증
 - 완료: C02 DB 제약과 애플리케이션 타입 target 계약 및 자동 대조
@@ -40,7 +40,8 @@ updated: 2026-09-27
 - 완료: Render GitHub App에 `dailyChat` 저장소 권한 추가, `2100ad5` push의 `new_commit` 자동 배포와 health 200 검증
 - 완료: Dashboard 운영 인증값 안전 교체·로컬/Render 동기화와 미인증 401·인증 200·날짜 선택·반응형 CSS 검증
 - 완료: GitHub Actions 예약 실행 2회 성공과 빈 입력 no-op 확인
-- 다음 작업: [[11 실행 체크리스트]] P0 이전 정상 deploy 롤백 검증
+- 완료: Render 이전 정상 deploy 롤백·최신 커밋 복원·`On Commit` 재활성화 검증
+- 다음 작업: [[11 실행 체크리스트]] P1 예약 실행 지연 허용 범위와 실패 대응 확정
 - 전체 상태: [[15 현재 진행 현황]]
 
 ## EPIC A — 기반
@@ -122,5 +123,5 @@ updated: 2026-09-27
 - [ ] G06 빈 환경에서 복구 리허설
 - [ ] G07 위기 연락처와 대응 문구 최신성 검증
 - [ ] G08 사용량·지연·오류 대시보드/알림
-- [ ] G09 배포와 롤백 runbook 검증
+- [x] G09 배포와 롤백 runbook 검증
 - [ ] G10 제한 운영 승인
