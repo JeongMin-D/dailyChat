@@ -1,0 +1,41 @@
+name: Encrypted Supabase backup
+
+on:
+  schedule:
+    - cron: "20 20 * * 0" # Monday 05:20 KST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Export public application data
+        env:
+          SUPABASE_URL: https://ofximcgkhherplhvwkny.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BACKUP_OUTPUT: dailychat-public.json
+        run: node scripts/export-public-backup.js
+      - name: Encrypt and remove plaintext
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          test -n "$BACKUP_PASSPHRASE"
+          openssl enc -aes-256-cbc -salt -pbkdf2 -in dailychat-public.json -out dailychat-public.json.enc -pass env:BACKUP_PASSPHRASE
+          rm dailychat-public.json
+          sha256sum dailychat-public.json.enc > dailychat-public.json.enc.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dailychat-supabase-${{ github.run_id }}
+          path: |
+            dailychat-public.json.enc
+            dailychat-public.json.enc.sha256
+          retention-days: 14
+          if-no-files-found: error

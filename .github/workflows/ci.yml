@@ -34,3 +34,42 @@ jobs:
 
       - name: Run quality checks
         run: npm run check
+
+  recovery-drill:
+    name: Restore into empty PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build source database from migrations
+        shell: bash
+        run: |
+          psql -d postgres -v ON_ERROR_STOP=1 -c "create role anon; create role authenticated; create role service_role;"
+          createdb dailychat_source
+          for migration in database/migrations/*.sql; do psql -d dailychat_source -v ON_ERROR_STOP=1 -f "$migration"; done
+          psql -d dailychat_source -v ON_ERROR_STOP=1 -c "insert into public.settings(owner_email, telegram_user_id, telegram_chat_id) values ('recovery@example.invalid', 1, 1);"
+      - name: Restore backup into an empty database
+        shell: bash
+        run: |
+          pg_dump -d dailychat_source --no-owner --no-privileges > recovery.sql
+          createdb dailychat_recovered
+          psql -d dailychat_recovered -v ON_ERROR_STOP=1 -f recovery.sql
+          test "$(psql -d dailychat_recovered -Atc "select count(*) from public.settings")" = "1"
+          test "$(psql -d dailychat_recovered -Atc "select count(*) from pg_tables where schemaname='public')" = "22"
+          rm recovery.sql
