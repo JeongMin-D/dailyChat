@@ -32,6 +32,17 @@ function commonHeaders(requestId, contentType) {
   };
 }
 
+async function formBody(request) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of request) {
+    size += chunk.length;
+    if (size > 8_192) throw new TypeError("Dashboard form is too large");
+    chunks.push(chunk);
+  }
+  return new URLSearchParams(Buffer.concat(chunks).toString("utf8"));
+}
+
 export class DashboardApp {
   constructor({ username, password, store }) {
     this.username = username;
@@ -70,6 +81,22 @@ export class DashboardApp {
       response.writeHead(200, commonHeaders(requestId, "text/css; charset=utf-8"));
       response.end(dashboardStyles);
       return 200;
+    }
+    if (url.pathname === "/dashboard/action" && request.method === "POST") {
+      if (!["http", "https"].some((scheme) => request.headers.origin === `${scheme}://${request.headers.host}`)) {
+        response.writeHead(403, commonHeaders(requestId, "text/plain; charset=utf-8"));
+        response.end("Invalid origin");
+        return 403;
+      }
+      const form = await formBody(request);
+      const action = form.get("action");
+      if (action === "feedback") await this.store.saveFeedback({ diaryId: form.get("diaryId"), rating: form.get("rating"), note: form.get("note") });
+      else if (action === "memory-update") await this.store.updateMemory({ memoryId: form.get("memoryId"), fact: form.get("fact") });
+      else if (action === "memory-forget") await this.store.forgetMemory({ memoryId: form.get("memoryId") });
+      else throw new TypeError("Unknown dashboard action");
+      response.writeHead(303, { ...commonHeaders(requestId, "text/plain; charset=utf-8"), location: `/dashboard?day=${encodeURIComponent(form.get("day") || "")}` });
+      response.end("Saved");
+      return 303;
     }
     if (url.pathname !== "/dashboard" || request.method !== "GET") return null;
     try {

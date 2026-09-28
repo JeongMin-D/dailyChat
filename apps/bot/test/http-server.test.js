@@ -56,6 +56,31 @@ test("GET 대시보드 요청을 dashboard app에 위임한다", async () => {
   }
 });
 
+test("POST 대시보드 작업도 dashboard app에 위임한다", async () => {
+  let receivedMethod;
+  const server = createHttpServer({
+    conversation: { handle: async () => ({ status: 200, result: "ok" }) },
+    bodyLimitBytes: 1_024,
+    dashboard: {
+      async handle(request, response) {
+        receivedMethod = request.method;
+        response.writeHead(303, { location: "/dashboard" });
+        response.end();
+        return 303;
+      }
+    }
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  try {
+    const { port } = server.address();
+    const response = await fetch(`http://127.0.0.1:${port}/dashboard/action`, { method: "POST", redirect: "manual" });
+    assert.equal(response.status, 303);
+    assert.equal(receivedMethod, "POST");
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test("Telegram secret header와 JSON body를 service에 전달한다", async () => {
   let received;
   await withServer({

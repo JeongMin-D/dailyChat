@@ -25,6 +25,10 @@ test("선택한 날짜의 일기와 타임라인을 서버에서 조합한다", 
     if (table === "diaries") return response([{ id: "d1", day: "2026-09-24", version: 1, title: "하루", summary_mood: "후련함", tags: [] }]);
     if (table === "diary_blocks") return response([{ id: "b1", position: 0, text: "문제를 해결했다." }]);
     if (table === "diary_block_message_sources") return response([{ diary_block_id: "b1", message_id: "m1" }]);
+    if (table === "memory_candidates") return response([{ id: "mc1", category: "project", fact: "DailyChat", version: 1 }]);
+    if (table === "diary_feedback") return response([{ rating: "helpful", note: "좋음" }]);
+    if (table === "job_runs") return response([{ day: "2026-09-24", status: "succeeded" }]);
+    if (table === "notification_outbox") return response([]);
     throw new Error(`Unexpected table: ${table}`);
   };
   const store = new SupabaseDashboardStore({ url: "https://example.supabase.co", serviceRoleKey: "sb_secret_test", fetchImpl });
@@ -33,8 +37,26 @@ test("선택한 날짜의 일기와 타임라인을 서버에서 조합한다", 
   assert.equal(result.messages.length, 1);
   assert.equal(result.searchResults.length, 3);
   assert.deepEqual(result.blocks[0].sourceMessageIds, ["m1"]);
+  assert.equal(result.memories[0].fact, "DailyChat");
+  assert.equal(result.feedback.rating, "helpful");
+  assert.equal(result.operations.jobs[0].status, "succeeded");
   assert.ok(seen.every(({ options }) => options.headers.apikey === "sb_secret_test"));
   assert.ok(seen.every(({ options }) => options.headers.authorization === undefined));
+});
+
+test("Dashboard 쓰기 RPC에 검증된 identity를 함께 보낸다", async () => {
+  const seen = [];
+  const store = new SupabaseDashboardStore({
+    url: "https://example.supabase.co", serviceRoleKey: "sb_secret_test",
+    userId: "123", chatId: "456",
+    fetchImpl: async (url, options) => { seen.push({ url, options }); return response({ action: "updated" }); }
+  });
+  await store.updateMemory({ memoryId: "mc1", fact: "수정" });
+  await store.forgetMemory({ memoryId: "mc1" });
+  const bodies = seen.map(({ options }) => JSON.parse(options.body));
+  assert.deepEqual(bodies.map(({ p_telegram_user_id, p_telegram_chat_id }) => [p_telegram_user_id, p_telegram_chat_id]), [[123, 456], [123, 456]]);
+  assert.match(seen[0].url, /rpc\/update_memory_candidate_from_dashboard$/);
+  assert.match(seen[1].url, /rpc\/forget_memory_candidate$/);
 });
 
 test("잘못된 날짜와 Data API 실패를 안전하게 거부한다", async () => {

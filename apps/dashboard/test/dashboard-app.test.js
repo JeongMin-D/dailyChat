@@ -15,6 +15,9 @@ const data = {
   diary: { id: "d1", version: 1, title: "테스트 일기", summary_mood: null, tags: [], created_at: "2026-09-24T19:00:00Z" },
   blocks: [{ position: 0, text: "근거 있는 일기", sourceMessageIds: ["m1"] }],
   recentMoods: [{ day: "2026-09-24", score: 3, label: "보통" }],
+  memories: [{ id: "mc1", category: "project", fact: "DailyChat", version: 1 }],
+  feedback: null,
+  operations: { jobs: [{ day: "2026-09-24", status: "succeeded", started_at: "2026-09-24T19:00:00Z", finished_at: "2026-09-24T19:00:03Z" }], failedNotifications: [] },
   query: "",
   searchResults: []
 };
@@ -60,11 +63,37 @@ test("인증된 사용자에게 실제 기록 화면을 렌더링한다", async 
     assert.match(html, /class="month-calendar"/);
     assert.match(html, /href="#message-m1">근거 대화 1<\/a>/);
     assert.match(html, /id="message-m1"/);
+    assert.match(html, /name="action" value="feedback"/);
+    assert.match(html, /name="action" value="memory-update"/);
+    assert.match(html, /name="action" value="memory-forget"/);
+    assert.match(html, /최근 야간 작업/);
+    assert.match(html, />3s</);
     assert.match(html, /class="score-3"/);
     assert.doesNotMatch(html, /style="height:/);
     assert.doesNotMatch(html, /service.role|SUPABASE_SERVICE_ROLE_KEY/i);
   });
   assert.deepEqual(received, { day: "2026-09-24", query: "기록" });
+});
+
+test("동일 출처의 인증된 Dashboard POST만 처리한다", async () => {
+  const actions = [];
+  const store = {
+    load: async () => data,
+    updateMemory: async (input) => actions.push(input)
+  };
+  const app = new DashboardApp({ username: "owner", password: "password-123456", store });
+  await withApp(app, async (baseUrl) => {
+    const authorization = `Basic ${Buffer.from("owner:password-123456").toString("base64")}`;
+    const denied = await fetch(`${baseUrl}/dashboard/action`, { method: "POST", headers: { authorization, origin: "https://evil.example" }, body: "action=memory-update" });
+    assert.equal(denied.status, 403);
+    const response = await fetch(`${baseUrl}/dashboard/action`, {
+      method: "POST", redirect: "manual",
+      headers: { authorization, origin: baseUrl, "content-type": "application/x-www-form-urlencoded" },
+      body: "action=memory-update&day=2026-09-24&memoryId=mc1&fact=%EC%88%98%EC%A0%95"
+    });
+    assert.equal(response.status, 303);
+  });
+  assert.deepEqual(actions, [{ memoryId: "mc1", fact: "수정" }]);
 });
 
 test("설정되지 않은 대시보드는 공개하지 않는다", async () => {

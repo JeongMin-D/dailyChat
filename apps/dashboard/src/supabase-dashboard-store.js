@@ -10,7 +10,7 @@ function uniqueDays(rows) {
 }
 
 export class SupabaseDashboardStore {
-  constructor({ url, serviceRoleKey, timeoutMs = 15_000, fetchImpl = fetch }) {
+  constructor({ url, serviceRoleKey, userId, chatId, timeoutMs = 15_000, fetchImpl = fetch }) {
     if (!url || !serviceRoleKey) throw new TypeError("url and serviceRoleKey are required");
     this.baseUrl = `${url.replace(/\/$/, "")}/rest/v1`;
     this.headers = { apikey: serviceRoleKey };
@@ -19,6 +19,8 @@ export class SupabaseDashboardStore {
     }
     this.timeoutMs = timeoutMs;
     this.fetch = fetchImpl;
+    this.userId = userId;
+    this.chatId = chatId;
   }
 
   async rows(table, params) {
@@ -33,6 +35,29 @@ export class SupabaseDashboardStore {
       });
     }
     return ensureArray(await response.json(), table);
+  }
+
+  async rpc(name, body) {
+    const response = await this.fetch(`${this.baseUrl}/rpc/${name}`, {
+      method: "POST",
+      headers: { ...this.headers, "content-type": "application/json" },
+      body: JSON.stringify({ ...body, p_telegram_user_id: Number(this.userId), p_telegram_chat_id: Number(this.chatId) }),
+      signal: AbortSignal.timeout(this.timeoutMs)
+    });
+    if (!response.ok) throw Object.assign(new Error(`Dashboard action failed with status ${response.status}`), { code: "DASHBOARD_ACTION_FAILED", status: response.status });
+    return response.json();
+  }
+
+  saveFeedback({ diaryId, rating, note }) {
+    return this.rpc("save_diary_feedback", { p_diary_id: diaryId, p_rating: rating, p_note: note || null });
+  }
+
+  updateMemory({ memoryId, fact }) {
+    return this.rpc("update_memory_candidate_from_dashboard", { p_memory_candidate_id: memoryId, p_fact: fact });
+  }
+
+  forgetMemory({ memoryId }) {
+    return this.rpc("forget_memory_candidate", { p_memory_candidate_id: memoryId });
   }
 
   /** @param {{day?: string, query?: string}} [options] */
@@ -91,7 +116,26 @@ export class SupabaseDashboardStore {
       order: "day.desc,created_at.desc",
       limit: "14"
     });
-    const recentMoods = await this.rows("mood_entries", trendParams);
+    const [recentMoods, memories, feedbackRows, jobs, failedNotifications] = await Promise.all([
+      this.rows("mood_entries", trendParams),
+      this.rows("memory_candidates", new URLSearchParams({
+        select: "id,category,fact,confidence,version,valid_from,updated_at",
+        status: "eq.confirmed",
+        order: "updated_at.desc",
+        limit: "100"
+      })),
+      diary ? this.rows("diary_feedback", new URLSearchParams({
+        select: "rating,note", diary_id: `eq.${diary.id}`, limit: "1"
+      })) : Promise.resolve([]),
+      this.rows("job_runs", new URLSearchParams({
+        select: "day,status,attempt,error_code,started_at,finished_at,created_at",
+        job_type: "eq.nightly", order: "created_at.desc", limit: "14"
+      })),
+      this.rows("notification_outbox", new URLSearchParams({
+        select: "id,status,last_error_code,updated_at",
+        status: "in.(retryable_failed,failed)", order: "updated_at.desc", limit: "100"
+      }))
+    ]);
     const normalizedQuery = query.trim().slice(0, 100).toLocaleLowerCase("ko-KR");
     const searchable = [
       ...messages.map((item) => ({ kind: item.role === "user" ? "내 메시지" : "챗봇", text: item.content, at: item.sent_at })),
@@ -113,6 +157,9 @@ export class SupabaseDashboardStore {
       diary,
       blocks: sourcedBlocks,
       recentMoods,
+      memories,
+      feedback: feedbackRows[0] || null,
+      operations: { jobs, failedNotifications },
       query: query.trim().slice(0, 100),
       searchResults
     };

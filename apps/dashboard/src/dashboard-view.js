@@ -75,6 +75,9 @@ export function renderDashboard(data) {
        ${data.diary.summary_mood ? `<p class="mood-summary">${escapeHtml(data.diary.summary_mood)}</p>` : ""}
        <div class="diary-copy">${data.blocks.map((block) => `<div class="diary-block"><p>${escapeHtml(block.text)}</p>${block.sourceMessageIds?.length ? `<div class="sources">${block.sourceMessageIds.map((id, index) => `<a href="#message-${escapeHtml(id)}">근거 대화 ${index + 1}</a>`).join("")}</div>` : ""}</div>`).join("")}</div>`
     : empty("이 날짜에는 아직 생성된 일기가 없습니다.");
+  const feedback = data.diary ? `<form class="feedback-form" action="/dashboard/action" method="post"><input type="hidden" name="action" value="feedback"><input type="hidden" name="day" value="${escapeHtml(data.selectedDay)}"><input type="hidden" name="diaryId" value="${escapeHtml(data.diary.id)}"><span>이 일기가 도움이 되었나요?</span><button name="rating" value="helpful" class="secondary">👍</button><button name="rating" value="unhelpful" class="secondary">👎</button><input name="note" maxlength="500" value="${escapeHtml(data.feedback?.note || "")}" placeholder="선택 메모"></form>` : "";
+  const memories = data.memories.length ? `<div class="memory-list">${data.memories.map((memory) => `<form action="/dashboard/action" method="post"><input type="hidden" name="day" value="${escapeHtml(data.selectedDay)}"><input type="hidden" name="memoryId" value="${escapeHtml(memory.id)}"><span>${escapeHtml(memory.category)} · v${memory.version}</span><input name="fact" maxlength="500" value="${escapeHtml(memory.fact)}"><button name="action" value="memory-update">수정</button><button name="action" value="memory-forget" class="danger">잊기</button></form>`).join("")}</div>` : empty("활성 기억이 없습니다.");
+  const latestJob = data.operations.jobs[0];
   const search = data.query
     ? `<div class="search-results"><h3>“${escapeHtml(data.query)}” 검색 결과 <span>${data.searchResults.length}</span></h3>${data.searchResults.length
       ? data.searchResults.map((item) => `<article><span>${escapeHtml(item.kind)}</span><time>${formatTime(item.at)}</time><p>${escapeHtml(item.text)}</p></article>`).join("")
@@ -105,7 +108,9 @@ export function renderDashboard(data) {
       <article><span>기분</span><strong>${data.moods.at(-1)?.score || "–"}</strong><small>${escapeHtml(data.moods.at(-1)?.label || "기록 없음")}</small></article>
       <article><span>일기</span><strong>${data.diary ? `v${data.diary.version}` : "–"}</strong><small>${data.diary ? "생성 완료" : "대기 중"}</small></article>
     </section>
-    <section id="diary" class="card diary">${diaryBody}</section>
+    <section id="diary" class="card diary">${diaryBody}${feedback}</section>
+    <section id="memory" class="card"><div class="card-title"><div><span class="eyebrow">MEMORY</span><h2>내 기억</h2></div><span class="count-pill">${data.memories.length}개</span></div>${memories}</section>
+    <section id="operations" class="stats"><article><span>최근 야간 작업</span><strong>${escapeHtml(latestJob?.status || "–")}</strong><small>${escapeHtml(latestJob?.day || "기록 없음")}</small></article><article><span>최근 14회 성공</span><strong>${data.operations.jobs.filter(({ status }) => status === "succeeded").length}</strong><small>총 ${data.operations.jobs.length}회</small></article><article><span>전송 실패</span><strong>${data.operations.failedNotifications.length}</strong><small>재시도·최종 실패</small></article><article><span>최근 지연</span><strong>${latestJob?.started_at && latestJob?.finished_at ? `${Math.max(0, Math.round((new Date(latestJob.finished_at).valueOf() - new Date(latestJob.started_at).valueOf()) / 1000))}s` : "–"}</strong><small>작업 실행 시간</small></article></section>
     <div class="grid">
       <section id="timeline" class="card"><div class="card-title"><div><span class="eyebrow">TIMELINE</span><h2>하루의 흐름</h2></div><span class="count-pill">${data.messages.length + data.events.length + data.health.length}개</span></div>${timeline(data)}</section>
       <section id="wellbeing" class="stack">
@@ -157,6 +162,7 @@ h2{font-size:clamp(20px,2.2vw,24px)}
 .mood-bar .score-5{height:90%}
 .mood-bar small{writing-mode:horizontal-tb;white-space:nowrap}
 .month-calendar{margin-bottom:18px}.month-title{font-weight:800;margin-bottom:8px}.weekdays,.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.weekdays{font-size:10px;color:var(--muted)}.month-grid>span,.month-day{aspect-ratio:1;display:grid;place-items:center;border-radius:7px;font-size:11px}.month-day{color:var(--muted);text-decoration:none}.month-day:hover,.month-day.active{background:#203629;color:var(--mint)}.diary-block{margin-bottom:18px}.diary-block p{margin-bottom:6px}.sources{display:flex;gap:7px;flex-wrap:wrap}.sources a{font:12px/1.4 Inter,sans-serif;color:var(--mint)}
+.feedback-form,.memory-list form{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:18px}.feedback-form span,.memory-list span{color:var(--muted);font-size:12px}.feedback-form input,.memory-list input{min-width:180px;flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--text)}button.secondary{background:#273029;color:var(--mint)}button.danger{background:#462628;color:#ffd3d3}.memory-list form{padding:12px 0;border-top:1px solid var(--line)}
 
 @media(max-width:1180px){
   .topbar{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}

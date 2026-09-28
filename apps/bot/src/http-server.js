@@ -67,7 +67,7 @@ export function createHttpServer({ conversation, bodyLimitBytes, dashboard, logg
       return send(200, { status: "ok" });
     }
 
-    if (request.method === "GET" && dashboard) {
+    if (dashboard && path.startsWith("/dashboard")) {
       try {
         const status = await dashboard.handle(request, response, requestId);
         if (status !== null) {

@@ -40,6 +40,8 @@ const dashboard = new DashboardApp({
   ...config.dashboard,
   store: new SupabaseDashboardStore({
     ...config.supabase,
+    userId: config.telegram.allowedUserId,
+    chatId: config.telegram.allowedChatId,
     timeoutMs: config.upstreamTimeoutMs
   })
 });
