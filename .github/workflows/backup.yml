@@ -12,6 +12,22 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGUSER: postgres
+      PGPASSWORD: postgres
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -31,6 +47,18 @@ jobs:
           openssl enc -aes-256-cbc -salt -pbkdf2 -in dailychat-public.json -out dailychat-public.json.enc -pass env:BACKUP_PASSPHRASE
           rm dailychat-public.json
           sha256sum dailychat-public.json.enc > dailychat-public.json.enc.sha256
+      - name: Recover encrypted backup into empty PostgreSQL
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          openssl enc -d -aes-256-cbc -pbkdf2 -in dailychat-public.json.enc -out dailychat-public.json -pass env:BACKUP_PASSPHRASE
+          psql -d postgres -v ON_ERROR_STOP=1 -c "create role anon; create role authenticated; create role service_role;"
+          createdb dailychat_recovered
+          for migration in database/migrations/*.sql; do psql -d dailychat_recovered -v ON_ERROR_STOP=1 -f "$migration"; done
+          node scripts/render-public-backup-sql.js
+          psql -d dailychat_recovered -v ON_ERROR_STOP=1 -f dailychat-restore.sql
+          test "$(psql -d dailychat_recovered -Atc "select count(*) from pg_tables where schemaname='public'")" = "22"
+          rm dailychat-public.json dailychat-restore.sql
       - uses: actions/upload-artifact@v4
         with:
           name: dailychat-supabase-${{ github.run_id }}
