@@ -71,5 +71,5 @@ jobs:
           createdb dailychat_recovered
           psql -d dailychat_recovered -v ON_ERROR_STOP=1 -f recovery.sql
           test "$(psql -d dailychat_recovered -Atc "select count(*) from public.settings")" = "1"
-          test "$(psql -d dailychat_recovered -Atc "select count(*) from pg_tables where schemaname='public')" = "22"
+          test "$(psql -d dailychat_recovered -Atc "select count(*) from pg_tables where schemaname='public'")" = "22"
           rm recovery.sql
