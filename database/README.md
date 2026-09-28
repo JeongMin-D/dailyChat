@@ -121,3 +121,16 @@ event-only 후보 저장은 검증 규칙을 추가하는 후속 단계까지 �
 - `SECURITY INVOKER`, anon/authenticated 실행 차단, service-role 전용 실행
 
 원문까지 파기하는 개인정보 완전 삭제는 보존·백업 복구 정책과 함께 별도 작업으로 처리한다.
+
+## 날짜 단위 개인정보 완전 삭제
+
+`20260928033726_personal_data_deletion.sql`은 닫힌 local day 하나를 완전 삭제하는 server-only RPC를 추가한다.
+
+- 정확한 날짜 확인 문자열과 설정된 Telegram user/chat ID를 모두 검증
+- 열린 오늘, 실행 중 job, 전송 중 알림 삭제 거부
+- 교차 날짜 근거가 발견되면 자동 삭제하지 않고 수동 검토 요구
+- 알림 원장 → 기억 → safety·일기 → health·mood·event → 원문 → Telegram/job 원장 순서
+- 한 트랜잭션에서 하나라도 실패하면 전체 rollback
+- `SECURITY INVOKER`, 빈 search path, service role 전용 실행
+
+운영 호출은 실제 사용자의 명시적 완전 삭제 확인 뒤 서버에서만 수행한다. 삭제 뒤 `MEMORY.md` 재생성과 자체 백업 교체는 별도 후속 단계다.
