@@ -16,6 +16,7 @@
     "smoke:nightly:live-data": "node --env-file=.env scripts/check-nightly-extraction.js --live-data",
     "smoke:nightly:pipeline": "node --env-file-if-exists=.env scripts/check-nightly-pipeline.js",
     "run:nightly": "node --env-file-if-exists=.env workers/nightly/src/index.js",
+    "project:memory": "node --env-file-if-exists=.env scripts/generate-memory-projection.js",
     "start:bot": "npm --workspace @mindcompanion/bot start",
     "lint": "eslint .",
     "typecheck": "tsc --project tsconfig.json",
