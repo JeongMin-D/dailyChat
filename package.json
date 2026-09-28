@@ -17,6 +17,7 @@
     "smoke:nightly:pipeline": "node --env-file-if-exists=.env scripts/check-nightly-pipeline.js",
     "run:nightly": "node --env-file-if-exists=.env workers/nightly/src/index.js",
     "project:memory": "node --env-file-if-exists=.env scripts/generate-memory-projection.js",
+    "delete:day": "node --env-file=.env scripts/delete-personal-data.js",
     "start:bot": "npm --workspace @mindcompanion/bot start",
     "lint": "eslint .",
     "typecheck": "tsc --project tsconfig.json",

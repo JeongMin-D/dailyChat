@@ -71,6 +71,22 @@ export class SupabaseMessageStore {
     return result;
   }
 
+  async deletePersonalDataForDay({ day, confirmation, userId, chatId }) {
+    const result = await this.request("/rpc/delete_personal_data_for_day", {
+      method: "POST",
+      body: JSON.stringify({
+        p_day: day,
+        p_confirm_day: confirmation,
+        p_telegram_user_id: Number(userId),
+        p_telegram_chat_id: Number(chatId)
+      })
+    });
+    if (result?.day !== day || !Number.isInteger(result?.messages)) {
+      throw new Error("Supabase personal data deletion returned an invalid response");
+    }
+    return result;
+  }
+
   async saveUserMessage(message) {
     await this.request("/messages", {
       method: "POST",

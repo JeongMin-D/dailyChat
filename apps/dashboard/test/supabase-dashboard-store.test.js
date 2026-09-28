@@ -24,6 +24,7 @@ test("선택한 날짜의 일기와 타임라인을 서버에서 조합한다", 
     if (table === "health_entries") return response([]);
     if (table === "diaries") return response([{ id: "d1", day: "2026-09-24", version: 1, title: "하루", summary_mood: "후련함", tags: [] }]);
     if (table === "diary_blocks") return response([{ id: "b1", position: 0, text: "문제를 해결했다." }]);
+    if (table === "diary_block_message_sources") return response([{ diary_block_id: "b1", message_id: "m1" }]);
     throw new Error(`Unexpected table: ${table}`);
   };
   const store = new SupabaseDashboardStore({ url: "https://example.supabase.co", serviceRoleKey: "sb_secret_test", fetchImpl });
@@ -31,6 +32,7 @@ test("선택한 날짜의 일기와 타임라인을 서버에서 조합한다", 
   assert.equal(result.diary.title, "하루");
   assert.equal(result.messages.length, 1);
   assert.equal(result.searchResults.length, 3);
+  assert.deepEqual(result.blocks[0].sourceMessageIds, ["m1"]);
   assert.ok(seen.every(({ options }) => options.headers.apikey === "sb_secret_test"));
   assert.ok(seen.every(({ options }) => options.headers.authorization === undefined));
 });

@@ -8,12 +8,12 @@ const data = {
   selectedDay: "2026-09-24",
   availableDays: ["2026-09-24"],
   diaryIndex: [{ id: "d1", day: "2026-09-24", version: 1, title: "테스트 일기", tags: [] }],
-  messages: [{ role: "user", content: "오늘 기록", sent_at: "2026-09-24T05:00:00Z" }],
+  messages: [{ id: "m1", role: "user", content: "오늘 기록", sent_at: "2026-09-24T05:00:00Z" }],
   events: [],
   moods: [],
   health: [],
   diary: { id: "d1", version: 1, title: "테스트 일기", summary_mood: null, tags: [], created_at: "2026-09-24T19:00:00Z" },
-  blocks: [{ position: 0, text: "근거 있는 일기" }],
+  blocks: [{ position: 0, text: "근거 있는 일기", sourceMessageIds: ["m1"] }],
   recentMoods: [{ day: "2026-09-24", score: 3, label: "보통" }],
   query: "",
   searchResults: []
@@ -57,6 +57,9 @@ test("인증된 사용자에게 실제 기록 화면을 렌더링한다", async 
     assert.match(html, /근거 있는 일기/);
     assert.match(html, /type="date" name="day" value="2026-09-24"/);
     assert.match(html, />날짜 보기<\/button>/);
+    assert.match(html, /class="month-calendar"/);
+    assert.match(html, /href="#message-m1">근거 대화 1<\/a>/);
+    assert.match(html, /id="message-m1"/);
     assert.match(html, /class="score-3"/);
     assert.doesNotMatch(html, /style="height:/);
     assert.doesNotMatch(html, /service.role|SUPABASE_SERVICE_ROLE_KEY/i);

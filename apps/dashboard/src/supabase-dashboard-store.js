@@ -73,6 +73,18 @@ export class SupabaseDashboardStore {
         order: "position.asc"
       }))
       : [];
+    const blockSources = blocks.length
+      ? await this.rows("diary_block_message_sources", new URLSearchParams({
+        select: "diary_block_id,message_id",
+        diary_block_id: `in.(${blocks.map(({ id }) => id).join(",")})`
+      }))
+      : [];
+    const sourcedBlocks = blocks.map((block) => ({
+      ...block,
+      sourceMessageIds: blockSources
+        .filter((source) => source.diary_block_id === block.id)
+        .map((source) => source.message_id)
+    }));
 
     const trendParams = new URLSearchParams({
       select: "day,score,label",
@@ -84,7 +96,7 @@ export class SupabaseDashboardStore {
     const searchable = [
       ...messages.map((item) => ({ kind: item.role === "user" ? "내 메시지" : "챗봇", text: item.content, at: item.sent_at })),
       ...events.map((item) => ({ kind: "이벤트", text: item.summary, at: item.occurred_at })),
-      ...blocks.map((item) => ({ kind: "일기", text: item.text, at: diary?.created_at }))
+      ...sourcedBlocks.map((item) => ({ kind: "일기", text: item.text, at: diary?.created_at }))
     ];
     const searchResults = normalizedQuery
       ? searchable.filter(({ text }) => text.toLocaleLowerCase("ko-KR").includes(normalizedQuery)).slice(0, 50)
@@ -99,7 +111,7 @@ export class SupabaseDashboardStore {
       moods,
       health,
       diary,
-      blocks,
+      blocks: sourcedBlocks,
       recentMoods,
       query: query.trim().slice(0, 100),
       searchResults

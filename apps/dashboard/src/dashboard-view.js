@@ -23,6 +23,18 @@ function empty(text) {
   return `<div class="empty">${escapeHtml(text)}</div>`;
 }
 
+function monthCalendar(selectedDay) {
+  const [year, month] = selectedDay.split("-").map(Number);
+  const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const cells = Array.from({ length: firstWeekday }, () => "<span></span>");
+  for (let day = 1; day <= days; day += 1) {
+    const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    cells.push(`<a class="month-day ${date === selectedDay ? "active" : ""}" href="/dashboard?day=${date}" aria-label="${date}">${day}</a>`);
+  }
+  return `<div class="month-calendar"><div class="month-title">${year}년 ${month}월</div><div class="weekdays"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="month-grid">${cells.join("")}</div></div>`;
+}
+
 function moodChart(items) {
   if (items.length === 0) return empty("아직 기분 기록이 없습니다.");
   return `<div class="mood-chart" aria-label="최근 기분 점수">${items.slice().reverse().map((item) => `
@@ -37,6 +49,7 @@ function timeline(data) {
     ...data.messages.map((item) => ({
       at: item.sent_at,
       badge: item.role === "user" ? "나" : "AI",
+      id: item.id,
       text: item.content,
       tone: item.role === "user" ? "user" : "assistant"
     })),
@@ -45,7 +58,7 @@ function timeline(data) {
   ].sort((a, b) => String(a.at || "").localeCompare(String(b.at || "")));
   if (items.length === 0) return empty("이 날짜에는 타임라인 기록이 없습니다.");
   return `<ol class="timeline">${items.map((item) => `
-    <li class="${item.tone}"><time>${formatTime(item.at)}</time><span class="badge">${escapeHtml(item.badge)}</span><p>${escapeHtml(item.text)}</p></li>`).join("")}</ol>`;
+    <li ${item.id ? `id="message-${escapeHtml(item.id)}"` : ""} class="${item.tone}"><time>${formatTime(item.at)}</time><span class="badge">${escapeHtml(item.badge)}</span><p>${escapeHtml(item.text)}</p></li>`).join("")}</ol>`;
 }
 
 export function renderDashboard(data) {
@@ -60,7 +73,7 @@ export function renderDashboard(data) {
   const diaryBody = data.diary
     ? `<header class="diary-header"><div><span class="eyebrow">DIARY · v${data.diary.version}</span><h2>${escapeHtml(data.diary.title)}</h2></div><div class="tags">${data.diary.tags.map((tag) => `<span>#${escapeHtml(tag)}</span>`).join("")}</div></header>
        ${data.diary.summary_mood ? `<p class="mood-summary">${escapeHtml(data.diary.summary_mood)}</p>` : ""}
-       <div class="diary-copy">${data.blocks.map((block) => `<p>${escapeHtml(block.text)}</p>`).join("")}</div>`
+       <div class="diary-copy">${data.blocks.map((block) => `<div class="diary-block"><p>${escapeHtml(block.text)}</p>${block.sourceMessageIds?.length ? `<div class="sources">${block.sourceMessageIds.map((id, index) => `<a href="#message-${escapeHtml(id)}">근거 대화 ${index + 1}</a>`).join("")}</div>` : ""}</div>`).join("")}</div>`
     : empty("이 날짜에는 아직 생성된 일기가 없습니다.");
   const search = data.query
     ? `<div class="search-results"><h3>“${escapeHtml(data.query)}” 검색 결과 <span>${data.searchResults.length}</span></h3>${data.searchResults.length
@@ -77,7 +90,7 @@ export function renderDashboard(data) {
 <body><div class="shell">
   <aside><a class="brand" href="/dashboard"><span>MC</span><div><strong>MindCompanion</strong><small>나의 하루 아카이브</small></div></a>
     <nav><a href="#today">오늘</a><a href="#diary">일기</a><a href="#timeline">타임라인</a><a href="#wellbeing">기분·건강</a></nav>
-    <div class="calendar"><div class="section-label">최근 기록</div><div class="day-list">${dayLinks || empty("아직 기록이 없습니다.")}</div></div>
+    <div class="calendar">${monthCalendar(data.selectedDay)}<div class="section-label">최근 기록</div><div class="day-list">${dayLinks || empty("아직 기록이 없습니다.")}</div></div>
     <footer><span class="status-dot"></span> Telegram · Supabase 연결</footer>
   </aside>
   <main>
@@ -143,6 +156,7 @@ h2{font-size:clamp(20px,2.2vw,24px)}
 .mood-bar .score-4{height:72%}
 .mood-bar .score-5{height:90%}
 .mood-bar small{writing-mode:horizontal-tb;white-space:nowrap}
+.month-calendar{margin-bottom:18px}.month-title{font-weight:800;margin-bottom:8px}.weekdays,.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.weekdays{font-size:10px;color:var(--muted)}.month-grid>span,.month-day{aspect-ratio:1;display:grid;place-items:center;border-radius:7px;font-size:11px}.month-day{color:var(--muted);text-decoration:none}.month-day:hover,.month-day.active{background:#203629;color:var(--mint)}.diary-block{margin-bottom:18px}.diary-block p{margin-bottom:6px}.sources{display:flex;gap:7px;flex-wrap:wrap}.sources a{font:12px/1.4 Inter,sans-serif;color:var(--mint)}
 
 @media(max-width:1180px){
   .topbar{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}

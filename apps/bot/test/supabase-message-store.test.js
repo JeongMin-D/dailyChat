@@ -152,6 +152,29 @@ test("기억 삭제 RPC에 후보와 검증된 Telegram identity를 전달한다
   });
 });
 
+test("날짜 완전 삭제 RPC에 확인 문자열과 검증된 identity를 전달한다", async () => {
+  let request;
+  const store = new SupabaseMessageStore({
+    url: "https://example.supabase.co",
+    serviceRoleKey: "sb_secret_test",
+    timeoutMs: 1000,
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return response({ day: "2026-09-24", messages: 2 });
+    }
+  });
+  await store.deletePersonalDataForDay({
+    day: "2026-09-24", confirmation: "2026-09-24", userId: "100", chatId: "200"
+  });
+  assert.match(request.url, /rpc\/delete_personal_data_for_day$/);
+  assert.deepEqual(JSON.parse(request.options.body), {
+    p_day: "2026-09-24",
+    p_confirm_day: "2026-09-24",
+    p_telegram_user_id: 100,
+    p_telegram_chat_id: 200
+  });
+});
+
 test("기억 결정 RPC에 후보와 검증된 Telegram identity를 전달한다", async () => {
   let request;
   const store = new SupabaseMessageStore({
